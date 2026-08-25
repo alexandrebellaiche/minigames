@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mastermind</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🧠</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Mastermind</h1>
+
+    <div id="settings">
+      <div class="setting-row">
+        <label>Mode:</label>
+        <div class="mode-toggle">
+          <button class="mode-btn active" data-mode="solo">Solo</button>
+          <button class="mode-btn" data-mode="2p">2 Player</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <label>Colors in code:</label>
+        <input type="number" id="code-length" min="2" max="6" value="4">
+      </div>
+      <div class="setting-row">
+        <label>Max attempts:</label>
+        <input type="number" id="max-attempts" min="4" max="20" value="10">
+      </div>
+      <div class="setting-row">
+        <label>Allow repeats:</label>
+        <input type="checkbox" id="allow-duplicates" checked>
+      </div>
+      <!--
+      <div class="setting-row">
+        <label>Debug (show code):</label>
+        <input type="checkbox" id="debug-mode">
+      </div>
+      -->
+      <div class="setting-buttons">
+        <button id="btn-reset" class="btn-secondary btn-sm">Reset Defaults</button>
+        <button id="btn-new-game">New Game</button>
+      </div>
+    </div>
+
+    <div class="game-area">
+      <div id="game-board" class="game-board">
+        <div id="board" class="board"></div>
+      </div>
+    </div>
+
+    <div id="color-wheel" class="color-wheel hidden"></div>
+
+    <div id="message" class="message"></div>
+    <div id="debug-code" class="debug-code hidden"></div>
+
+    <div id="code-entry-overlay" class="overlay hidden">
+      <div class="overlay-content code-entry-content">
+        <h2>Player 1: Set the Code</h2>
+        <p class="overlay-hint">Pick colors from the palette below, then click a slot to place them. You may use duplicate colors.</p>
+        <div id="code-entry-board" class="board"></div>
+        <div id="code-entry-palette" class="palette"></div>
+        <div class="code-entry-actions">
+          <button id="btn-clear-code" class="btn-secondary">Clear</button>
+          <button id="btn-lock-code" class="btn-primary">Lock Code</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="win-overlay" class="overlay hidden">
+      <div class="overlay-content">
+        <h2 id="win-title"></h2>
+        <p id="win-detail"></p>
+        <button id="btn-play-again" class="btn-primary">Play Again</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
