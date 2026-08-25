@@ -1,6 +1,6 @@
-.PHONY: serve clean
+include server.conf
 
-PORT ?= 8000
+.PHONY: serve clean
 
 serve:
 	@echo "Starting server on http://localhost:$(PORT)"
