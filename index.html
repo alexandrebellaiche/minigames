@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minigames</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎮</text></svg>">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: #0f0e17;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3rem 1rem;
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+    }
+
+    .subtitle {
+      color: #666;
+      font-size: 0.9rem;
+      margin-bottom: 3rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.2rem;
+      width: 100%;
+      max-width: 700px;
+    }
+
+    .card {
+      background: #1a1a2e;
+      border: 1px solid #2a2a40;
+      border-radius: 14px;
+      padding: 1.5rem;
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.15s, border-color 0.2s, box-shadow 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: #6434e9;
+      box-shadow: 0 8px 24px rgba(100,52,233,0.15);
+    }
+
+    .card-icon {
+      font-size: 2rem;
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      letter-spacing: 0.03em;
+    }
+
+    .card p {
+      font-size: 0.8rem;
+      color: #777;
+      line-height: 1.4;
+    }
+
+    .card-tag {
+      font-size: 0.65rem;
+      color: #6434e9;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      margin-top: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>Minigames</h1>
+  <p class="subtitle">A collection of browser-based games</p>
+
+  <div class="grid">
+    <a href="mastermind/" class="card">
+      <div class="card-icon">🧠</div>
+      <h2>Mastermind</h2>
+      <p>Crack the secret color code in 10 attempts. Solo or 2-player mode.</p>
+      <span class="card-tag">Logic</span>
+    </a>
+  </div>
+</body>
+</html>

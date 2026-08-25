@@ -4,7 +4,7 @@ PORT ?= 8000
 
 serve:
 	@echo "Starting server on http://localhost:$(PORT)"
-	@cd mastermind && python3 -m http.server $(PORT) &>/dev/null &
+	@python3 -m http.server $(PORT) &>/dev/null &
 	@open http://localhost:$(PORT)
 
 clean:
