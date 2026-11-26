@@ -32,6 +32,7 @@
 ### Card artwork
 - Full-card art in `artwork_v2/` is 219×341 pixels (0.642:1) and is displayed without cropping in 72×112 card frames (0.643:1).
 - Cards use thick category-color borders: green for machete, blue for paddle, yellow for coin, white for wild, and purple for action cards.
+- Clicking a hand or marketplace card opens an approximately 200%-scale preview. Its lower third carries the card name and rule text in a translucent white overlay; the preview provides the normal play, buy, or free-pick action and can be dismissed with Escape, its close button, or its backdrop.
 
 ### Action cards (implemented in this release)
 - **Scientist**: draw 1 card, then optionally remove 1 card from hand.

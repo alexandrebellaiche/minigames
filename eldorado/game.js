@@ -34,6 +34,17 @@ const CARD_ARTWORK = {
   native: 'native',
 };
 
+const CARD_RULES = {
+  giantMachete: 'Move through jungle with strength 6. Remove this card from the game after using it.',
+  propPlane: 'Choose jungle, river, or village and move with strength 4. Remove this card from the game after using it.',
+  transmitter: 'Take any available marketplace card for free and put it in your discard pile. Remove this card from the game after use.',
+  cartographer: 'Draw 2 cards. You may play the drawn cards this turn.',
+  compass: 'Draw 3 cards, then remove this card from the game.',
+  travelLog: 'Draw 2 cards, then you may remove up to 2 cards from your hand. Remove this card from the game after use.',
+  scientist: 'Draw 1 card, then you may remove 1 card from your hand. Remove this card from the game after use.',
+  native: 'Move to an adjacent non-mountain, unoccupied space without meeting its terrain requirement.',
+};
+
 let ws;
 const pendingMessages = [];
 let myId = null;
@@ -45,6 +56,7 @@ let selectedWildCardIndex = null;
 let paymentMode = false;
 let removalContext = '';
 let paymentContext = '';
+let cardPreviewAction = null;
 
 /* ---------- elements ---------- */
 
@@ -53,6 +65,12 @@ const el = {
   screenWaiting: document.getElementById('screen-waiting'),
   screenGame: document.getElementById('screen-game'),
   overlayGameOver: document.getElementById('overlay-gameover'),
+  overlayCardPreview: document.getElementById('overlay-card-preview'),
+  cardPreviewCard: document.getElementById('card-preview-card'),
+  cardPreviewTitle: document.getElementById('card-preview-title'),
+  cardPreviewRule: document.getElementById('card-preview-rule'),
+  btnCloseCardPreview: document.getElementById('btn-close-card-preview'),
+  btnCardPreviewAction: document.getElementById('btn-card-preview-action'),
   msgConnect: document.getElementById('msg-connect'),
   inputName: document.getElementById('input-name'),
   inputMap: document.getElementById('input-map'),
@@ -344,7 +362,10 @@ function renderHand() {
     if (CARD_ARTWORK[card.id]) elCard.classList.add('has-art');
     elCard.classList.toggle('selected', selectedCardIndexes.has(i) || selectedWildCardIndex === i);
     elCard.title = `${card.name} — ${card.symbol || 'action'} ${card.power}${card.cost ? ` · cost ${card.cost}` : ''}`;
-    elCard.addEventListener('click', () => onHandCardClick(i));
+    elCard.addEventListener('click', () => showCardPreview(card, {
+      label: buyMode ? 'Select for purchase' : 'Play card',
+      action: () => onHandCardClick(i),
+    }));
     elCard.innerHTML = cardFaceMarkup(card, false);
     el.hand.appendChild(elCard);
   });
@@ -379,7 +400,10 @@ function renderMarket() {
       elCard.className = `market-card symbol-${card.symbol || 'action'}${CARD_ARTWORK[card.id] ? ' has-art' : ''}`;
       elCard.innerHTML = `${cardFaceMarkup(card, true)}<div class="stock-count">${card.count} left</div>`;
       elCard.title = `Take ${card.name} for free — ${card.count} available`;
-      elCard.addEventListener('click', () => onMarketCardClick(i, card.id));
+      elCard.addEventListener('click', () => showCardPreview(card, {
+        label: 'Take for free',
+        action: () => onMarketCardClick(i, card.id),
+      }));
       el.marketRow.appendChild(elCard);
     });
     return;
@@ -399,7 +423,10 @@ function renderMarket() {
     }
     if (CARD_ARTWORK[card.id]) elCard.classList.add('has-art');
     const action = state.freePick === state.myId ? 'freePick' : 'buy';
-    elCard.addEventListener('click', () => onMarketCardClick(i, card.id));
+    elCard.addEventListener('click', () => showCardPreview(card, {
+      label: `Buy for ${card.cost}`,
+      action: () => onMarketCardClick(i, card.id),
+    }));
     elCard.innerHTML = cardFaceMarkup(card, true);
     elCard.title = `${card.name} — ${action === 'freePick' ? 'FREE (Transmitter)' : `cost ${card.cost}`}`;
     el.marketRow.appendChild(elCard);
@@ -563,6 +590,31 @@ function onMarketCardClick(i, cardId) {
   }
 }
 
+function cardRuleText(card) {
+  if (CARD_RULES[card.id]) return CARD_RULES[card.id];
+  const symbol = { machete: 'jungle', paddle: 'river', coin: 'village' }[card.symbol];
+  if (card.symbol === 'wild') return `Choose jungle, river, or village and move with strength ${card.power}.`;
+  if (symbol) return `Move through ${symbol} with strength ${card.power}.`;
+  return 'No special rule.';
+}
+
+function showCardPreview(card, { label, action }) {
+  cardPreviewAction = action;
+  el.cardPreviewCard.className = `card-preview-card card symbol-${card.symbol || 'action'}${CARD_ARTWORK[card.id] ? ' has-art' : ''}`;
+  el.cardPreviewCard.innerHTML = cardFaceMarkup(card, true);
+  el.cardPreviewTitle.textContent = card.name;
+  el.cardPreviewRule.textContent = cardRuleText(card);
+  el.btnCardPreviewAction.textContent = label;
+  el.btnCardPreviewAction.classList.remove('hidden');
+  el.overlayCardPreview.classList.remove('hidden');
+  el.btnCardPreviewAction.focus();
+}
+
+function closeCardPreview() {
+  cardPreviewAction = null;
+  el.overlayCardPreview.classList.add('hidden');
+}
+
 /* ---------- game over ---------- */
 
 function showGameOver() {
@@ -612,6 +664,19 @@ function init() {
   });
 
   el.btnEndTurn.addEventListener('click', () => send({ type: 'end_turn' }));
+
+  el.btnCloseCardPreview.addEventListener('click', closeCardPreview);
+  el.overlayCardPreview.addEventListener('click', (event) => {
+    if (event.target === el.overlayCardPreview) closeCardPreview();
+  });
+  el.btnCardPreviewAction.addEventListener('click', () => {
+    const action = cardPreviewAction;
+    closeCardPreview();
+    if (action) action();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !el.overlayCardPreview.classList.contains('hidden')) closeCardPreview();
+  });
 
   document.getElementById('btn-go-menu').addEventListener('click', () => {
     showScreen('connect');

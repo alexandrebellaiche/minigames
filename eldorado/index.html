@@ -81,6 +81,17 @@
         <button id="btn-go-again" class="btn-secondary">Rematch</button>
       </div>
     </div>
+
+    <!-- Card preview overlay -->
+    <div id="overlay-card-preview" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="card-preview-title">
+      <div class="card-preview-content">
+        <button id="btn-close-card-preview" class="card-preview-close" type="button" aria-label="Close card preview">×</button>
+        <div id="card-preview-card" aria-hidden="true"></div>
+        <h2 id="card-preview-title"></h2>
+        <p id="card-preview-rule"></p>
+        <button id="btn-card-preview-action" class="btn-primary hidden" type="button"></button>
+      </div>
+    </div>
   </div>
 
   <script src="game.js"></script>

@@ -10,6 +10,8 @@ A collection of browser-based minigames.
 | [Darkroom](darkroom/) | Lights-out grid puzzle |
 | [El Dorado](eldorado/) | Deck-building race through the jungle to the golden city |
 
+El Dorado includes a click-to-preview card inspector: cards expand to roughly double size and show their movement or special rule before you play or buy them.
+
 ## Run
 
 ```
