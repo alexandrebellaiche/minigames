@@ -376,7 +376,56 @@ h1 {
   gap: 0.5rem;
   overflow-x: auto;
   padding: 0.5rem 0;
+  align-items: flex-end;
+}
+
+.draw-deck {
+  --deck-depth: 0px;
+  position: relative;
+  width: 72px;
+  height: calc(112px + var(--deck-depth));
+  flex: 0 0 72px;
+  margin-left: auto;
+}
+
+.draw-deck::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 112px;
+  border: 3px solid #5c536a;
+  border-radius: 10px;
+  background: repeating-linear-gradient(180deg, #3c3748 0 2px, #2b2834 2px 4px);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.4);
+}
+
+.draw-deck-face {
+  position: absolute;
+  inset: var(--deck-depth) 0 auto;
+  height: 112px;
+  display: flex;
+  flex-direction: column;
   align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  border: 3px solid var(--accent-dim);
+  border-radius: 10px;
+  background: linear-gradient(145deg, #3c3748, #272530);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12), 0 3px 8px rgba(0,0,0,0.4);
+  color: var(--text);
+  text-align: center;
+}
+
+.draw-deck-face span {
+  font-size: 0.58rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.draw-deck-face strong {
+  color: var(--accent);
+  font-size: 1.75rem;
+  line-height: 1;
 }
 
 .card-controls {

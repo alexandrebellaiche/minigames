@@ -368,6 +368,16 @@ function renderHand() {
     elCard.innerHTML = cardFaceMarkup(card, false);
     el.hand.appendChild(elCard);
   });
+
+  const deck = document.createElement('div');
+  const deckSize = me?.deckSize || 0;
+  deck.className = 'draw-deck';
+  deck.style.setProperty('--deck-depth', `${deckSize * 2}px`);
+  deck.title = `${deckSize} card${deckSize === 1 ? '' : 's'} remaining in your draw deck`;
+  deck.setAttribute('role', 'img');
+  deck.setAttribute('aria-label', deck.title);
+  deck.innerHTML = `<div class="draw-deck-face"><span>Draw deck</span><strong>${deckSize}</strong></div>`;
+  el.hand.appendChild(deck);
 }
 
 function cardFaceMarkup(card, showCost) {

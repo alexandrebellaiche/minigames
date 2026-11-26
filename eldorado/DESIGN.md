@@ -23,6 +23,8 @@
 ### Client model
 - Thin client: renders the state it receives from the server; user clicks are sent as intent messages (`play_card`, `buy_card`, `toggle_buy`, `enter_special`, `remove_cards`, `free_pick`, `end_turn`).
 - Connection screens handle name entry, mode selection (AI / 2-player), map selection, and room join.
+- A draw-deck stack sits at the end of the local player’s hand. Its visible stack depth grows with the number of cards remaining in the draw deck, and its face displays that count.
+- The server checks that the requesting player owns the active turn before it accepts card play, purchase selection, buying, special-space entry, card removal, or turn-end intents.
 
 ### Maps
 - Preset linear routes mimicking the game's suggested set layouts (Beginner / Standard / Advanced).

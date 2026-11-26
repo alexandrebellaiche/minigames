@@ -421,16 +421,18 @@ class Game {
     return { ok, error };
   }
 
-  toggleBuy(cardIndex) {
+  toggleBuy(playerIndex, cardIndex) {
+    if (playerIndex !== this.currentIndex) return { ok: false, error: 'Not your turn.' };
     const p = this.players[this.currentIndex];
-    if (!p || this.gameOver || this.freePick !== null || this.pendingRemoval) return;
+    if (!p || this.gameOver || this.freePick !== null || this.pendingRemoval) return { ok: false, error: 'Cannot choose cards for purchase now.' };
     const card = p.hand[cardIndex];
-    if (!card) return;
+    if (!card) return { ok: false, error: 'No card.' };
     const i = this.buyCandidates.indexOf(cardIndex);
     if (i >= 0) this.buyCandidates.splice(i, 1);
     else this.buyCandidates.push(cardIndex);
     this.recomputeCoins();
     this.broadcast();
+    return { ok: true };
   }
 
   /* free pick from Transmitter */
@@ -485,8 +487,9 @@ class Game {
 
   /* ---------- turn flow ---------- */
 
-  endTurn() {
-    if (this.gameOver || this.freePick !== null || this.pendingRemoval) return;
+  endTurn(playerIndex) {
+    if (playerIndex !== this.currentIndex) return { ok: false, error: 'Not your turn.' };
+    if (this.gameOver || this.freePick !== null || this.pendingRemoval) return { ok: false, error: 'Resolve the current card effect first.' };
     const p = this.players[this.currentIndex];
     p.discard.push(...p.hand, ...p.played);
     p.hand = [];
@@ -500,7 +503,7 @@ class Game {
 
     if (this.finalRound && this.currentIndex === 0) {
       this.finishGame();
-      return;
+      return { ok: true };
     }
 
     this.phase = 'movement';
@@ -511,6 +514,7 @@ class Game {
     if (this.players[this.currentIndex].isAI && !this.gameOver) {
       setTimeout(() => this.aiTurn(), 700);
     }
+    return { ok: true };
   }
 
   reachElDorado(p) {
@@ -629,7 +633,7 @@ class Game {
       }
     }
 
-    this.endTurn();
+    this.endTurn(this.currentIndex);
   }
 
   /* ---------- state for client ---------- */
@@ -641,7 +645,7 @@ class Game {
       mapName: MAPS[this.mapKey].name,
       players: this.players.map(pl => ({
         id: pl.id, name: pl.name, color: pl.color, isAI: pl.isAI,
-        pos: pl.pos, handSize: pl.hand.length, discardSize: pl.discard.length,
+        pos: pl.pos, handSize: pl.hand.length, deckSize: pl.deck.length, discardSize: pl.discard.length,
         blockades: pl.blockades,
       })),
       currentIndex: this.currentIndex,
@@ -856,7 +860,8 @@ wss.on('connection', (ws) => {
       const res = game.playCard(pi, msg.cardIndex, msg.chosenSymbol);
       if (!res.ok) ws.send(JSON.stringify({ type: 'error', error: res.error }));
     } else if (type === 'toggle_buy') {
-      game.toggleBuy(msg.cardIndex);
+      const res = game.toggleBuy(pi, msg.cardIndex);
+      if (!res.ok) ws.send(JSON.stringify({ type: 'error', error: res.error }));
     } else if (type === 'buy_card') {
       const res = game.buyCard(pi, msg.marketIndex);
       if (!res.ok) ws.send(JSON.stringify({ type: 'error', error: res.error }));
@@ -875,7 +880,8 @@ wss.on('connection', (ws) => {
         game.broadcast();
       }
     } else if (type === 'end_turn') {
-      game.endTurn();
+      const res = game.endTurn(pi);
+      if (!res.ok) ws.send(JSON.stringify({ type: 'error', error: res.error }));
     }
   });
 
