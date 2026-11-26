@@ -19,10 +19,10 @@
   --camp:     #b5484a;
   --mountain: #3a3a3a;
   --gold:     #d4af37;
-  --card-machete: #31503a;
-  --card-paddle:  #354a61;
-  --card-coin:    #51482f;
-  --card-action:  #463a5b;
+  --card-machete: #dcebdc;
+  --card-paddle:  #dce8f4;
+  --card-coin:    #f3e9c9;
+  --card-action:  #e8def3;
 }
 
 body {
@@ -354,10 +354,10 @@ h1 {
 .card:hover { border-color: var(--accent); transform: translateY(-2px); }
 .card:active { transform: scale(0.97); }
 
-.card.symbol-machete, .market-card.symbol-machete { background: var(--card-machete); }
-.card.symbol-paddle,  .market-card.symbol-paddle  { background: var(--card-paddle); }
-.card.symbol-coin,    .market-card.symbol-coin    { background: var(--card-coin); }
-.card.symbol-action,  .market-card.symbol-action  { background: var(--card-action); }
+.card.symbol-machete, .market-card.symbol-machete { background: var(--card-machete); color: #26352a; }
+.card.symbol-paddle,  .market-card.symbol-paddle  { background: var(--card-paddle); color: #293443; }
+.card.symbol-coin,    .market-card.symbol-coin    { background: var(--card-coin); color: #3a3424; }
+.card.symbol-action,  .market-card.symbol-action  { background: var(--card-action); color: #342d40; }
 
 .card.symbol-machete { border-color: var(--jungle); }
 .card.symbol-paddle  { border-color: var(--river); }
@@ -376,6 +376,7 @@ h1 {
   place-items: center;
   background: rgba(0,0,0,0.35);
   border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
 }
 
 .card .buyable { color: var(--gold); }
