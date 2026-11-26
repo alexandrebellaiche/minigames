@@ -19,6 +19,10 @@
   --camp:     #b5484a;
   --mountain: #3a3a3a;
   --gold:     #d4af37;
+  --card-machete: #31503a;
+  --card-paddle:  #354a61;
+  --card-coin:    #51482f;
+  --card-action:  #463a5b;
 }
 
 body {
@@ -287,7 +291,7 @@ h1 {
   align-items: center;
   justify-content: center;
   gap: 0.2rem;
-  border: 2px solid rgba(0,0,0,0.35);
+  border: 1px solid rgba(255,255,255,0.85);
   position: absolute;
   user-select: none;
 }
@@ -296,7 +300,7 @@ h1 {
 .hex .power  { font-size: 0.65rem; font-weight: 700; opacity: 0.85; }
 .hex .label  { font-size: 0.55rem; text-transform: uppercase; letter-spacing: 0.05em; text-align: center; line-height: 1.1; padding: 0 2px; }
 
-.hex.dorado { background: var(--gold); color: #2b1a00; border-color: #2b1a00; }
+.hex.dorado { background: var(--gold); color: #2b1a00; }
 .hex.dorado .symbol { font-size: 1.8rem; }
 
 .hex .pieces {
@@ -349,6 +353,11 @@ h1 {
 
 .card:hover { border-color: var(--accent); transform: translateY(-2px); }
 .card:active { transform: scale(0.97); }
+
+.card.symbol-machete, .market-card.symbol-machete { background: var(--card-machete); }
+.card.symbol-paddle,  .market-card.symbol-paddle  { background: var(--card-paddle); }
+.card.symbol-coin,    .market-card.symbol-coin    { background: var(--card-coin); }
+.card.symbol-action,  .market-card.symbol-action  { background: var(--card-action); }
 
 .card.symbol-machete { border-color: var(--jungle); }
 .card.symbol-paddle  { border-color: var(--river); }
