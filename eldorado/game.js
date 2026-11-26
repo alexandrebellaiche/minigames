@@ -57,7 +57,6 @@ function connect() {
   ws = new WebSocket(`${protocol}//${location.host}`);
 
   ws.onopen = () => {
-    ws.send(JSON.stringify({ type: 'hello' }));
     while (pendingMessages.length > 0) {
       ws.send(JSON.stringify(pendingMessages.shift()));
     }
@@ -130,9 +129,10 @@ function populateMaps(mapKeys) {
 
 function showScreen(name) {
   ['connect', 'waiting', 'game'].forEach((n) => {
-    document.getElementById(`screen-${n}`).classList.add('hidden');
+    const screen = document.getElementById(`screen-${n}`);
+    screen.classList.toggle('active', n === name);
+    screen.classList.toggle('hidden', n !== name);
   });
-  document.getElementById(`screen-${name}`).classList.remove('hidden');
   el.overlayGameOver.classList.add('hidden');
 }
 
