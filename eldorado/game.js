@@ -204,49 +204,95 @@ function renderMap() {
   const hexWidth = parseFloat(mapStyles.getPropertyValue('--hex-width'));
   const hexHeight = parseFloat(mapStyles.getPropertyValue('--hex-height'));
   const hexStep = hexWidth * 0.75;
-  const columnCount = Math.ceil(state.route.length / 2);
-  const rowCount = Math.ceil(state.route.length / columnCount);
+  const bundleSize = 5;
+  const bundleColumns = 3;
+  const bundlePadding = parseFloat(mapStyles.getPropertyValue('--bundle-padding'));
+  const bundleGap = parseFloat(mapStyles.getPropertyValue('--bundle-gap'));
+  const bundleCount = Math.ceil(state.route.length / bundleSize);
+  const bundleWidth = hexWidth + (bundleColumns - 1) * hexStep + bundlePadding * 2;
+  const bundleHeight = hexHeight * 2.5 + bundlePadding * 2;
   const mapTrack = document.createElement('div');
   mapTrack.className = 'map-track';
-  mapTrack.style.width = `${hexWidth + (columnCount - 1) * hexStep}px`;
-  mapTrack.style.height = `${hexHeight * (rowCount + 0.5)}px`;
+  mapTrack.style.width = `${bundleCount * bundleWidth + (bundleCount - 1) * bundleGap}px`;
+  const bundleTop = (index) => (index % 2 === 0 ? 0 : hexHeight * 0.75);
+  mapTrack.style.height = `${bundleHeight + (bundleCount > 1 ? hexHeight * 0.75 : 0)}px`;
   el.map.appendChild(mapTrack);
 
-  state.route.forEach((space, i) => {
-    const row = Math.floor(i / columnCount);
-    const indexInRow = i % columnCount;
-    const column = row % 2 === 0 ? indexInRow : columnCount - 1 - indexInRow;
-    const hex = document.createElement('div');
-    hex.className = `hex ${space.terrain}${space.gate ? ' dorado' : ''}`;
-    hex.style.left = `${column * hexStep}px`;
-    hex.style.top = `${row * hexHeight + (column % 2 === 0 ? hexHeight / 2 : 0)}px`;
-    hex.style.backgroundColor = {
-      jungle: '#3a7d44', river: '#2f6db5', village: '#c9a227',
-      rubble: '#8a7d68', camp: '#b5484a', mountain: '#353535',
-    }[space.terrain];
-    const t = {
-      jungle: { symbol: '🌿' }, river: { symbol: '🌊' }, village: { symbol: '🏛️' },
-      rubble: { symbol: '⛰️' }, camp: { symbol: '⛺' }, mountain: { symbol: '⬛' },
-    }[space.terrain];
-    hex.innerHTML = `
-      <div class="symbol">${space.gate ? '🏆' : t.symbol}</div>
-      ${space.power > 0 ? `<div class="power">${space.power}</div>` : ''}
-      <div class="label">${space.label}</div>
-    `;
-    const pieces = document.createElement('div');
-    pieces.className = 'pieces';
-    state.players.forEach((pl) => {
-      if (pl.pos === i) {
-        const piece = document.createElement('div');
-        piece.className = 'piece';
-        piece.style.backgroundColor = pl.color;
-        piece.title = `${pl.name}${pl.isAI ? ' (AI)' : ''}`;
-        pieces.appendChild(piece);
-      }
-    });
-    hex.appendChild(pieces);
-    mapTrack.appendChild(hex);
-  });
+  const centers = [];
+  for (let bundleIndex = 0, routeIndex = 0; bundleIndex < bundleCount; bundleIndex++) {
+    const bundle = document.createElement('div');
+    bundle.className = 'map-bundle';
+    const bundleLeft = bundleIndex * (bundleWidth + bundleGap);
+    const bundleY = bundleTop(bundleIndex);
+    bundle.style.left = `${bundleLeft}px`;
+    bundle.style.top = `${bundleY}px`;
+    bundle.style.width = `${bundleWidth}px`;
+    bundle.style.height = `${bundleHeight}px`;
+    mapTrack.appendChild(bundle);
+
+    const spacesInBundle = Math.min(bundleSize, state.route.length - routeIndex);
+    for (let localIndex = 0; localIndex < spacesInBundle; localIndex++, routeIndex++) {
+      const row = Math.floor(localIndex / bundleColumns);
+      const indexInRow = localIndex % bundleColumns;
+      const column = row % 2 === 0 ? indexInRow : bundleColumns - 1 - indexInRow;
+      const left = bundlePadding + column * hexStep;
+      const top = bundlePadding + row * hexHeight + (column % 2 === 0 ? hexHeight / 2 : 0);
+      const space = state.route[routeIndex];
+      const hex = document.createElement('div');
+      hex.className = `hex ${space.terrain}${space.gate ? ' dorado' : ''}`;
+      hex.title = `${space.label}${space.power > 0 ? ` · power ${space.power}` : ''}`;
+      hex.style.left = `${left}px`;
+      hex.style.top = `${top}px`;
+      hex.style.backgroundColor = {
+        jungle: '#3a7d44', river: '#2f6db5', village: '#c9a227',
+        rubble: '#8a7d68', camp: '#b5484a', mountain: '#353535',
+      }[space.terrain];
+      const t = {
+        jungle: { symbol: '🌿' }, river: { symbol: '🌊' }, village: { symbol: '🏛️' },
+        rubble: { symbol: '⛰️' }, camp: { symbol: '⛺' }, mountain: { symbol: '⬛' },
+      }[space.terrain];
+      hex.innerHTML = `
+        <div class="symbol">${space.gate ? '🏆' : t.symbol}</div>
+        ${space.power > 0 ? `<div class="power">${space.power}</div>` : ''}
+        <div class="label">${space.label}</div>
+      `;
+      const pieces = document.createElement('div');
+      pieces.className = 'pieces';
+      state.players.forEach((pl) => {
+        if (pl.pos === routeIndex) {
+          const piece = document.createElement('div');
+          piece.className = 'piece';
+          piece.style.backgroundColor = pl.color;
+          piece.title = `${pl.name}${pl.isAI ? ' (AI)' : ''}`;
+          pieces.appendChild(piece);
+        }
+      });
+      hex.appendChild(pieces);
+      bundle.appendChild(hex);
+      centers[routeIndex] = {
+        x: bundleLeft + left + hexWidth / 2,
+        y: bundleY + top + hexHeight / 2,
+      };
+    }
+  }
+
+  if (bundleCount > 1) {
+    const svgNS = 'http://www.w3.org/2000/svg';
+    const connectors = document.createElementNS(svgNS, 'svg');
+    connectors.classList.add('map-connectors');
+    connectors.setAttribute('viewBox', `0 0 ${parseFloat(mapTrack.style.width)} ${parseFloat(mapTrack.style.height)}`);
+    connectors.setAttribute('aria-hidden', 'true');
+    mapTrack.prepend(connectors);
+    for (let bundleIndex = 0; bundleIndex < bundleCount - 1; bundleIndex++) {
+      const routeIndex = Math.min((bundleIndex + 1) * bundleSize, state.route.length) - 1;
+      const line = document.createElementNS(svgNS, 'line');
+      line.setAttribute('x1', centers[routeIndex].x);
+      line.setAttribute('y1', centers[routeIndex].y);
+      line.setAttribute('x2', centers[routeIndex + 1].x);
+      line.setAttribute('y2', centers[routeIndex + 1].y);
+      connectors.appendChild(line);
+    }
+  }
 }
 
 function renderHand() {
