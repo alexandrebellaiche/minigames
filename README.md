@@ -7,6 +7,7 @@ A collection of browser-based minigames.
 | Game | Description |
 |------|-------------|
 | [Mastermind](mastermind/) | Classic code-breaking board game |
+| [El Dorado](eldorado/) | Deck-building race through the jungle to the golden city |
 
 ## Run
 

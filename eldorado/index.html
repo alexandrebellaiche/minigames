@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>El Dorado</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏜️</text></svg>">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <a href="../" class="back-link" title="Back to menu">←</a>
+    <h1>El Dorado</h1>
+    <p class="tagline">A deck-building race through the jungle to the golden city</p>
+
+    <!-- Connect / lobby screen -->
+    <div id="screen-connect" class="screen active">
+      <div id="settings">
+        <div class="setting-row">
+          <label>Your name:</label>
+          <input type="text" id="input-name" value="Player" maxlength="16">
+        </div>
+        <div class="setting-row">
+          <label>Mode:</label>
+          <div class="mode-toggle">
+            <button class="mode-btn active" data-mode="ai">Solo vs AI</button>
+            <button class="mode-btn" data-mode="2p">2-Player (online)</button>
+          </div>
+        </div>
+        <div class="setting-row" id="row-map">
+          <label>Map:</label>
+          <select id="input-map"></select>
+        </div>
+        <div class="setting-buttons">
+          <button id="btn-create" class="btn-primary">Create Room</button>
+        </div>
+        <div class="setting-row join-row">
+          <label>Join room:</label>
+          <input type="text" id="input-room" placeholder="Room ID" maxlength="8">
+          <button id="btn-join" class="btn-secondary btn-sm">Join</button>
+        </div>
+      </div>
+      <div id="msg-connect" class="message"></div>
+    </div>
+
+    <!-- Waiting screen -->
+    <div id="screen-waiting" class="screen hidden">
+      <div class="panel">
+        <div class="turn-label">Room <span id="wait-room"></span></div>
+        <div id="wait-players" class="player-list"></div>
+        <div id="wait-hint" class="message">Waiting for opponent…</div>
+        <button id="btn-start" class="btn-primary hidden">Start Expedition</button>
+        <button id="btn-leave-wait" class="btn-secondary btn-sm">Leave</button>
+      </div>
+    </div>
+
+    <!-- Game screen -->
+    <div id="screen-game" class="screen hidden">
+      <div class="hud">
+        <div id="turn-label" class="turn-label">Player 1's turn</div>
+        <div id="phase-label" class="phase-label">Phase: Move</div>
+        <div id="coins" class="coins">Coins: 0</div>
+      </div>
+      <div id="map" class="map"></div>
+      <div id="hand" class="hand"></div>
+      <div class="market">
+        <div class="market-header">Market</div>
+        <div id="market-row" class="market-row"></div>
+      </div>
+      <div id="message" class="message"></div>
+      <button id="btn-end-turn" class="btn-secondary btn-sm">End Turn</button>
+    </div>
+
+    <!-- Game over overlay -->
+    <div id="overlay-gameover" class="overlay hidden">
+      <div class="overlay-content">
+        <h2 id="go-title"></h2>
+        <p id="go-detail"></p>
+        <button id="btn-go-menu" class="btn-primary">Main Menu</button>
+        <button id="btn-go-again" class="btn-secondary">Rematch</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>
