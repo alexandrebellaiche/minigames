@@ -67,7 +67,6 @@ const el = {
   overlayGameOver: document.getElementById('overlay-gameover'),
   overlayCardPreview: document.getElementById('overlay-card-preview'),
   cardPreviewCard: document.getElementById('card-preview-card'),
-  cardPreviewTitle: document.getElementById('card-preview-title'),
   cardPreviewRule: document.getElementById('card-preview-rule'),
   btnCloseCardPreview: document.getElementById('btn-close-card-preview'),
   btnCardPreviewAction: document.getElementById('btn-card-preview-action'),
@@ -602,7 +601,6 @@ function showCardPreview(card, { label, action }) {
   cardPreviewAction = action;
   el.cardPreviewCard.className = `card-preview-card card symbol-${card.symbol || 'action'}${CARD_ARTWORK[card.id] ? ' has-art' : ''}`;
   el.cardPreviewCard.innerHTML = cardFaceMarkup(card, true);
-  el.cardPreviewTitle.textContent = card.name;
   el.cardPreviewRule.textContent = cardRuleText(card);
   el.btnCardPreviewAction.textContent = label;
   el.btnCardPreviewAction.classList.remove('hidden');

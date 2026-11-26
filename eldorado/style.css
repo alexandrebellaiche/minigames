@@ -655,19 +655,17 @@ h1 {
   pointer-events: none;
 }
 
-.card-preview-content h2,
 .card-preview-content p {
   position: absolute;
   z-index: 1;
-  width: 140px;
+  width: 148px;
   color: #1d2920;
   text-align: center;
   text-shadow: none;
   pointer-events: none;
 }
 
-.card-preview-content h2 { top: 177px; font-size: 0.82rem; line-height: 1.1; }
-.card-preview-content p { top: 201px; font-size: 0.63rem; line-height: 1.25; }
+.card-preview-content p { top: 178px; font-size: 0.945rem; line-height: 1.08; letter-spacing: -0.025em; }
 
 .card-preview-close {
   position: absolute;
