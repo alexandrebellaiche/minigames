@@ -10,6 +10,19 @@ const MAPS = {
 };
 
 const SYMBOL_CHAR = { machete: '🌿', paddle: '🌊', coin: '🪙' };
+const CARD_ARTWORK = {
+  sailor: 'sailor',
+  explorer: 'explorer',
+  traveler: 'traveler',
+  scout: 'scout',
+  trailblazer: 'trailblazer',
+  scientist: 'scientist',
+  transmitter: 'transmitter',
+  cartographer: 'cartographer',
+  compass: 'compass',
+  travelLog: 'travel-log',
+  native: 'native',
+};
 
 let ws;
 const pendingMessages = [];
@@ -306,18 +319,30 @@ function renderHand() {
     elCard.className = `card symbol-${card.symbol || 'action'} ${
       state.buyCandidates && state.buyCandidates.includes(i) ? 'earmarked' : ''
     }`;
+    if (CARD_ARTWORK[card.id]) elCard.classList.add('has-art');
     elCard.title = `${card.name} — ${card.symbol || 'action'} ${card.power}${card.cost ? ` · cost ${card.cost}` : ''}`;
     elCard.addEventListener('click', () => onHandCardClick(i));
-    elCard.innerHTML = `
-      <div class="symbol">${card.symbol ? SYMBOL_CHAR[card.symbol] : '🪄'}</div>
-      <div class="name">${card.name}</div>
-      <div class="stats">
-        <div class="power">${card.power}</div>
-        ${card.cost > 0 ? `<div class="cost buyable">${card.cost}</div>` : ''}
-      </div>
-    `;
+    elCard.innerHTML = cardFaceMarkup(card, false);
     el.hand.appendChild(elCard);
   });
+}
+
+function cardFaceMarkup(card, showCost) {
+  const artwork = CARD_ARTWORK[card.id];
+  const details = `
+    <div class="name">${card.name}</div>
+    <div class="stats">
+      <div class="power">${card.power}</div>
+      ${showCost || card.cost > 0 ? `<div class="cost buyable">${card.cost}</div>` : ''}
+    </div>
+  `;
+  if (!artwork) {
+    return `<div class="symbol">${card.symbol ? SYMBOL_CHAR[card.symbol] : '🪄'}</div>${details}`;
+  }
+  return `
+    <img class="card-art" src="artwork/interior/${artwork}.png" alt="">
+    <div class="card-info">${details}</div>
+  `;
 }
 
 function renderMarket() {
@@ -334,16 +359,10 @@ function renderMarket() {
       el.marketRow.appendChild(elCard);
       return;
     }
+    if (CARD_ARTWORK[card.id]) elCard.classList.add('has-art');
     const action = state.freePick === state.myId ? 'freePick' : 'buy';
     elCard.addEventListener('click', () => onMarketCardClick(i));
-    elCard.innerHTML = `
-      <div class="symbol">${card.symbol ? SYMBOL_CHAR[card.symbol] : '🪄'}</div>
-      <div class="name">${card.name}</div>
-      <div class="stats">
-        <div class="power">${card.power}</div>
-        <div class="cost buyable">${card.cost}</div>
-      </div>
-    `;
+    elCard.innerHTML = cardFaceMarkup(card, true);
     elCard.title = `${card.name} — ${action === 'freePick' ? 'FREE (Transmitter)' : `cost ${card.cost}`}`;
     el.marketRow.appendChild(elCard);
   });

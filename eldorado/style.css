@@ -378,7 +378,7 @@ h1 {
 }
 
 .card {
-  width: 72px;
+  width: 76px;
   height: 104px;
   flex: 0 0 auto;
   border-radius: 10px;
@@ -408,11 +408,11 @@ h1 {
 .card.symbol-coin    { border-color: var(--village); }
 .card.symbol-action  { border-color: #8a5cf6; }
 
-.card .symbol { font-size: 1.6rem; line-height: 1; margin-bottom: 0.2rem; }
-.card .name   { font-size: 0.62rem; font-weight: 700; text-align: center; line-height: 1.15; margin-bottom: 0.25rem; }
-.card .stats  { display: flex; gap: 0.35rem; font-size: 0.6rem; font-weight: 700; }
+.card .symbol, .market-card .symbol { font-size: 1.6rem; line-height: 1; margin-bottom: 0.2rem; }
+.card .name, .market-card .name { font-size: 0.62rem; font-weight: 700; text-align: center; line-height: 1.15; margin-bottom: 0.25rem; }
+.card .stats, .market-card .stats { display: flex; gap: 0.35rem; font-size: 0.6rem; font-weight: 700; }
 
-.card .power, .card .cost {
+.card .power, .card .cost, .market-card .power, .market-card .cost {
   width: 20px;
   height: 20px;
   border-radius: 6px;
@@ -423,7 +423,7 @@ h1 {
   color: #fff;
 }
 
-.card .buyable { color: var(--gold); }
+.card .buyable, .market-card .buyable { color: var(--gold); }
 
 .card.earmarked {
   outline: 3px solid var(--gold);
@@ -453,7 +453,7 @@ h1 {
 }
 
 .market-card {
-  width: 72px;
+  width: 76px;
   height: 104px;
   flex: 0 0 auto;
   border-radius: 10px;
@@ -473,6 +473,64 @@ h1 {
 .market-card:hover { border-color: var(--accent); transform: translateY(-2px); }
 .market-card.empty { cursor: default; background: #1d2820; border-style: dashed; }
 .market-card.unaffordable { opacity: 0.55; }
+
+.card.has-art, .market-card.has-art {
+  position: relative;
+  overflow: hidden;
+  padding: 0;
+  border: 1px solid rgba(255,255,255,0.55);
+  background: #17251a;
+  color: #fff;
+}
+
+.card-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-info {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 1rem 0.15rem 0.2rem;
+  background: linear-gradient(180deg, transparent, rgba(0,0,0,0.82) 48%);
+}
+
+.card.has-art .name, .market-card.has-art .name {
+  max-width: 100%;
+  margin: 0;
+  color: #fff;
+  font-size: 0.55rem;
+  line-height: 1.05;
+  text-shadow: 0 1px 2px #000;
+}
+
+.card.has-art .stats, .market-card.has-art .stats {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+  font-size: 0.55rem;
+}
+
+.card.has-art .power, .card.has-art .cost,
+.market-card.has-art .power, .market-card.has-art .cost {
+  width: 18px;
+  height: 18px;
+  border-radius: 5px;
+  background: rgba(0,0,0,0.65);
+  border: 1px solid rgba(255,255,255,0.35);
+  color: #fff;
+}
+
+.card.has-art .buyable, .market-card.has-art .buyable { color: var(--gold); }
 
 .market-card .price {
   font-size: 0.65rem;

@@ -591,7 +591,7 @@ function serveStatic(res, file) {
       return;
     }
     const ext = path.extname(file);
-    const ct = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript', '.md': 'text/markdown' }[ext] || 'text/plain';
+    const ct = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript', '.md': 'text/markdown', '.png': 'image/png' }[ext] || 'text/plain';
     res.writeHead(200, { 'Content-Type': ct });
     res.end(data);
   });
@@ -615,6 +615,17 @@ const server = http.createServer((req, res) => {
     '/eldorado/style.css': 'eldorado/style.css',
     '/eldorado/game.js': 'eldorado/game.js',
     '/eldorado/DESIGN.md': 'eldorado/DESIGN.md',
+    '/eldorado/artwork/interior/sailor.png': 'eldorado/artwork/interior/sailor.png',
+    '/eldorado/artwork/interior/explorer.png': 'eldorado/artwork/interior/explorer.png',
+    '/eldorado/artwork/interior/traveler.png': 'eldorado/artwork/interior/traveler.png',
+    '/eldorado/artwork/interior/scout.png': 'eldorado/artwork/interior/scout.png',
+    '/eldorado/artwork/interior/trailblazer.png': 'eldorado/artwork/interior/trailblazer.png',
+    '/eldorado/artwork/interior/scientist.png': 'eldorado/artwork/interior/scientist.png',
+    '/eldorado/artwork/interior/transmitter.png': 'eldorado/artwork/interior/transmitter.png',
+    '/eldorado/artwork/interior/cartographer.png': 'eldorado/artwork/interior/cartographer.png',
+    '/eldorado/artwork/interior/compass.png': 'eldorado/artwork/interior/compass.png',
+    '/eldorado/artwork/interior/travel-log.png': 'eldorado/artwork/interior/travel-log.png',
+    '/eldorado/artwork/interior/native.png': 'eldorado/artwork/interior/native.png',
     '/style.css': 'eldorado/style.css',
     '/game.js': 'eldorado/game.js',
     '/DESIGN.md': 'eldorado/DESIGN.md',

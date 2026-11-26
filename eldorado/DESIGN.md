@@ -29,6 +29,10 @@
 - The client groups each route into offset bundles of up to five smaller, edge-sharing hexes, joined by dashed connectors; the server keeps the route as a linear sequence for movement.
 - Each route ends at the gate to El Dorado. Route is chosen when the room is created.
 
+### Card artwork
+- Source cards are 219×341 pixels (0.642:1). Cropped illustration assets remove the frame and title panel using the crop box `(15, 69, 204, 327)`, resulting in 189×258 pixels (0.733:1).
+- Cards display at 76×104 pixels (0.731:1) to closely match the illustration ratio. Artwork is used when a matching card image exists; other cards retain their symbol-based design.
+
 ### Action cards (implemented in this release)
 - **Scientist**: draw 1 card, then optionally remove 1 card from hand.
 - **Transmitter**: take any available market card for free (put on discard pile).
