@@ -6,7 +6,7 @@
 - Jungle=machete/green, River=paddle/blue, Village=coin/yellow.
 - Enter a space with a matching card whose power >= space cost; leftover power carries across adjacent same-terrain spaces.
 - Cards cannot be combined to pay for one space.
-- Rubble takes any cards; Base Camp removes spent cards from the game (deck thinning).
+- Rubble takes any cards and sends them to the discard pile; Base Camp removes its payment cards from the game (deck thinning).
 - Turn: play any number of cards to move and/or buy **one** card; discard played cards; draw back to 4.
 - Coin cards = full coin value for buying; all other cards = ½ coin; no change.
 - First to El Dorado triggers the final round; ties broken by blockades (deferred).
@@ -21,7 +21,7 @@
 - Solo mode plays against a simple server-side AI that takes its turns automatically.
 
 ### Client model
-- Thin client: renders the state it receives from the server; user clicks are sent as intent messages (`play_card`, `buy_card`, `toggle_buy`, `end_turn`).
+- Thin client: renders the state it receives from the server; user clicks are sent as intent messages (`play_card`, `buy_card`, `toggle_buy`, `enter_special`, `remove_cards`, `free_pick`, `end_turn`).
 - Connection screens handle name entry, mode selection (AI / 2-player), map selection, and room join.
 
 ### Maps
@@ -30,17 +30,17 @@
 - Each route ends at the gate to El Dorado. Route is chosen when the room is created.
 
 ### Card artwork
-- Source cards are 219×341 pixels (0.642:1). Cropped illustration assets remove the frame and title panel using the crop box `(15, 69, 204, 327)`, resulting in 189×258 pixels (0.733:1).
-- Cards display at 76×104 pixels (0.731:1) to closely match the illustration ratio. Artwork is used when a matching card image exists; other cards retain their symbol-based design.
+- Full-card art in `artwork_v2/` is 219×341 pixels (0.642:1) and is displayed without cropping in 72×112 card frames (0.643:1).
+- Cards use thick category-color borders: green for machete, blue for paddle, yellow for coin, white for wild, and purple for action cards.
 
 ### Action cards (implemented in this release)
 - **Scientist**: draw 1 card, then optionally remove 1 card from hand.
-- **Transmitter**: take any available market card for free (put on discard pile).
+- **Transmitter**: take any available marketplace supply card for free (put on discard pile).
 - **Cartographer**: draw 2 cards (playable this turn).
 - **Compass**: draw 3 cards.
-- **Travel Log**: draw 2 cards, remove up to 2 cards from hand.
+- **Travel Log**: draw 2 cards, then optionally remove up to 2 cards from hand.
 - **Native**: move 1 space ignoring terrain requirements (not onto mountain or occupied space).
-- Action cards are removed from the game after use.
+- Only cards with a one-use effect are removed from the game after use; Cartographer and Native are discarded normally.
 
 ### Scope (this release)
 - Networked 2-player (same room, alternating turns)

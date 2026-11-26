@@ -41,6 +41,7 @@ minigames/
 │   └── game.js
 ├── eldorado/
 │   ├── DESIGN.md
+│   ├── artwork_v2/ (named full-card artwork)
 │   ├── index.html
 │   ├── package.json
 │   ├── package-lock.json

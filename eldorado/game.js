@@ -9,13 +9,23 @@ const MAPS = {
   river:   { name: 'River Run',         desc: 'Advanced — long river & village stretches' },
 };
 
-const SYMBOL_CHAR = { machete: '🌿', paddle: '🌊', coin: '🪙' };
+const SYMBOL_CHAR = { machete: '🌿', paddle: '🌊', coin: '🪙', wild: '⚪' };
 const CARD_ARTWORK = {
   sailor: 'sailor',
   explorer: 'explorer',
   traveler: 'traveler',
   scout: 'scout',
   trailblazer: 'trailblazer',
+  pioneer: 'pioneer',
+  giantMachete: 'giant-machete',
+  captain: 'captain',
+  photographer: 'photographer',
+  journalist: 'journalist',
+  treasureChest: 'treasure-chest',
+  millionaire: 'millionaire',
+  jackOfAllTrades: 'jack-of-all-trades',
+  adventurer: 'adventurer',
+  propPlane: 'prop-plane',
   scientist: 'scientist',
   transmitter: 'transmitter',
   cartographer: 'cartographer',
@@ -30,6 +40,11 @@ let myId = null;
 let myColor = null;
 let state = null;
 let buyMode = false; // when true, hand clicks earmark for buying; when false, they play for movement
+let selectedCardIndexes = new Set();
+let selectedWildCardIndex = null;
+let paymentMode = false;
+let removalContext = '';
+let paymentContext = '';
 
 /* ---------- elements ---------- */
 
@@ -55,6 +70,7 @@ const el = {
   coins: document.getElementById('coins'),
   map: document.getElementById('map'),
   hand: document.getElementById('hand'),
+  cardControls: document.getElementById('card-controls'),
   marketRow: document.getElementById('market-row'),
   message: document.getElementById('message'),
   btnEndTurn: document.getElementById('btn-end-turn'),
@@ -101,7 +117,8 @@ function connect() {
         }
         break;
       case 'error':
-        setConnectMessage(msg.error);
+        if (state) el.message.textContent = msg.error;
+        else setConnectMessage(msg.error);
         break;
     }
   };
@@ -181,6 +198,7 @@ function render() {
   renderMap();
   renderHand();
   renderMarket();
+  renderCardControls();
   renderMessage();
   renderEndTurn();
 }
@@ -190,7 +208,7 @@ function renderHud() {
   el.turnLabel.textContent = state.finalRound
     ? `FINAL ROUND — ${p.name}'s turn`
     : `${p.name}'s turn${p.isAI ? ' (AI)' : ''}`;
-  el.phaseLabel.textContent = `Phase: ${state.phase.charAt(0).toUpperCase() + state.phase.slice()}`;
+  el.phaseLabel.textContent = `Phase: ${state.phase.charAt(0).toUpperCase() + state.phase.slice(1)}`;
   el.coins.textContent = `Coins: ${state.coins}`;
 
   // buy mode toggle
@@ -200,9 +218,13 @@ function renderHud() {
     el.buyModeBtn.id = 'btn-buy-mode';
     el.buyModeBtn.textContent = buyMode ? '💰 Buy Mode' : '🚶 Move Mode';
     el.buyModeBtn.addEventListener('click', () => {
+      if (buyMode) {
+        (state.buyCandidates || []).forEach(i => send({ type: 'toggle_buy', cardIndex: i }));
+      }
       buyMode = !buyMode;
-      state.buyCandidates = [];
-      state.coins = 0;
+      selectedCardIndexes.clear();
+      selectedWildCardIndex = null;
+      paymentMode = false;
       render();
     });
     el.btnEndTurn.insertAdjacentElement('afterend', el.buyModeBtn);
@@ -320,6 +342,7 @@ function renderHand() {
       state.buyCandidates && state.buyCandidates.includes(i) ? 'earmarked' : ''
     }`;
     if (CARD_ARTWORK[card.id]) elCard.classList.add('has-art');
+    elCard.classList.toggle('selected', selectedCardIndexes.has(i) || selectedWildCardIndex === i);
     elCard.title = `${card.name} — ${card.symbol || 'action'} ${card.power}${card.cost ? ` · cost ${card.cost}` : ''}`;
     elCard.addEventListener('click', () => onHandCardClick(i));
     elCard.innerHTML = cardFaceMarkup(card, false);
@@ -329,24 +352,39 @@ function renderHand() {
 
 function cardFaceMarkup(card, showCost) {
   const artwork = CARD_ARTWORK[card.id];
-  const details = `
-    <div class="name">${card.name}</div>
+  const stats = `
     <div class="stats">
       <div class="power">${card.power}</div>
       ${showCost || card.cost > 0 ? `<div class="cost buyable">${card.cost}</div>` : ''}
     </div>
   `;
   if (!artwork) {
-    return `<div class="symbol">${card.symbol ? SYMBOL_CHAR[card.symbol] : '🪄'}</div>${details}`;
+    return `
+      <div class="symbol">${card.symbol ? SYMBOL_CHAR[card.symbol] || '⚪' : '🪄'}</div>
+      <div class="name">${card.name}</div>
+      ${stats}
+    `;
   }
   return `
-    <img class="card-art" src="artwork/interior/${artwork}.png" alt="">
-    <div class="card-info">${details}</div>
+    <img class="card-art" src="artwork_v2/${artwork}.png" alt="">
+    <div class="card-info">${stats}</div>
   `;
 }
 
 function renderMarket() {
   el.marketRow.innerHTML = '';
+  if (state.freePick === myId) {
+    state.marketSupply.forEach((card, i) => {
+      const elCard = document.createElement('div');
+      elCard.className = `market-card symbol-${card.symbol || 'action'}${CARD_ARTWORK[card.id] ? ' has-art' : ''}`;
+      elCard.innerHTML = `${cardFaceMarkup(card, true)}<div class="stock-count">${card.count} left</div>`;
+      elCard.title = `Take ${card.name} for free — ${card.count} available`;
+      elCard.addEventListener('click', () => onMarketCardClick(i, card.id));
+      el.marketRow.appendChild(elCard);
+    });
+    return;
+  }
+
   const me = state.players[state.myId !== undefined ? state.myId : myId];
   state.market.forEach((card, i) => {
     const elCard = document.createElement('div');
@@ -361,11 +399,112 @@ function renderMarket() {
     }
     if (CARD_ARTWORK[card.id]) elCard.classList.add('has-art');
     const action = state.freePick === state.myId ? 'freePick' : 'buy';
-    elCard.addEventListener('click', () => onMarketCardClick(i));
+    elCard.addEventListener('click', () => onMarketCardClick(i, card.id));
     elCard.innerHTML = cardFaceMarkup(card, true);
     elCard.title = `${card.name} — ${action === 'freePick' ? 'FREE (Transmitter)' : `cost ${card.cost}`}`;
     el.marketRow.appendChild(elCard);
   });
+}
+
+function renderCardControls() {
+  if (!state) return;
+  const pending = state.pendingRemoval?.playerIndex === myId ? state.pendingRemoval : null;
+  const removalKey = pending ? `${pending.playerIndex}:${pending.max}` : '';
+  if (removalKey !== removalContext) {
+    selectedCardIndexes.clear();
+    removalContext = removalKey;
+  }
+
+  const player = state.players[myId];
+  const next = player && state.route[player.pos + 1];
+  const special = next && ['rubble', 'camp'].includes(next.terrain) ? next : null;
+  const nextKey = special ? `${player.pos}:${special.terrain}:${special.power}` : '';
+  if (paymentMode && nextKey !== paymentContext) {
+    paymentMode = false;
+    selectedCardIndexes.clear();
+  }
+  if (!paymentMode) paymentContext = nextKey;
+
+  const myTurn = state.currentIndex === myId && !state.gameOver && state.freePick === null;
+  if (!myTurn) {
+    el.cardControls.classList.add('hidden');
+    el.cardControls.innerHTML = '';
+    renderEndTurn();
+    return;
+  }
+
+  if (pending) {
+    el.cardControls.innerHTML = `
+      <div>Select up to ${pending.max} card(s) to remove from the game.</div>
+      <button id="btn-remove-selected" class="btn-primary btn-sm">Remove selected (${selectedCardIndexes.size})</button>
+      <button id="btn-skip-removal" class="btn-secondary btn-sm">Keep remaining cards</button>
+    `;
+    el.cardControls.querySelector('#btn-remove-selected').disabled = selectedCardIndexes.size === 0;
+    el.cardControls.querySelector('#btn-remove-selected').addEventListener('click', () => {
+      send({ type: 'remove_cards', cardIndexes: [...selectedCardIndexes] });
+    });
+    el.cardControls.querySelector('#btn-skip-removal').addEventListener('click', () => {
+      send({ type: 'remove_cards', cardIndexes: [] });
+    });
+  } else if (selectedWildCardIndex !== null) {
+    el.cardControls.innerHTML = `
+      <div>Choose the movement symbol for this card.</div>
+      <button class="btn-secondary btn-sm" data-symbol="machete">🌿 Jungle</button>
+      <button class="btn-secondary btn-sm" data-symbol="paddle">🌊 River</button>
+      <button class="btn-secondary btn-sm" data-symbol="coin">🪙 Village</button>
+      <button id="btn-cancel-symbol" class="btn-secondary btn-sm">Cancel</button>
+    `;
+    el.cardControls.querySelectorAll('[data-symbol]').forEach(button => {
+      button.addEventListener('click', () => {
+        const cardIndex = selectedWildCardIndex;
+        selectedWildCardIndex = null;
+        renderHand();
+        renderCardControls();
+        send({ type: 'play_card', cardIndex, chosenSymbol: button.dataset.symbol });
+      });
+    });
+    el.cardControls.querySelector('#btn-cancel-symbol').addEventListener('click', () => {
+      selectedWildCardIndex = null;
+      renderHand();
+      renderCardControls();
+    });
+  } else if (paymentMode && special) {
+    const label = special.terrain === 'camp' ? 'Base Camp' : 'Rubble';
+    el.cardControls.innerHTML = `
+      <div>Select exactly ${special.power} card(s) to enter ${label}.</div>
+      <button id="btn-pay-cards" class="btn-primary btn-sm">Enter ${label} (${selectedCardIndexes.size}/${special.power})</button>
+      <button id="btn-cancel-payment" class="btn-secondary btn-sm">Cancel</button>
+    `;
+    el.cardControls.querySelector('#btn-pay-cards').disabled = selectedCardIndexes.size !== special.power;
+    el.cardControls.querySelector('#btn-pay-cards').addEventListener('click', () => {
+      send({ type: 'enter_special', cardIndexes: [...selectedCardIndexes] });
+    });
+    el.cardControls.querySelector('#btn-cancel-payment').addEventListener('click', () => {
+      paymentMode = false;
+      paymentContext = '';
+      selectedCardIndexes.clear();
+      renderHand();
+      renderCardControls();
+    });
+  } else if (special && !buyMode) {
+    const label = special.terrain === 'camp' ? 'Base Camp' : 'Rubble';
+    el.cardControls.innerHTML = `<button id="btn-start-payment" class="btn-secondary btn-sm">Pay ${special.power} card(s) to enter ${label}</button>`;
+    el.cardControls.querySelector('#btn-start-payment').addEventListener('click', () => {
+      paymentMode = true;
+      paymentContext = nextKey;
+      selectedCardIndexes.clear();
+      renderHand();
+      renderCardControls();
+    });
+  } else {
+    el.cardControls.classList.add('hidden');
+    el.cardControls.innerHTML = '';
+    renderEndTurn();
+    return;
+  }
+
+  el.cardControls.classList.remove('hidden');
+  renderEndTurn();
 }
 
 function renderMessage() {
@@ -374,10 +513,11 @@ function renderMessage() {
 
 function renderEndTurn() {
   const me = state.players[state.myId !== undefined ? state.myId : myId];
-  const myTurn = state.currentIndex === state.myId && !state.gameOver && !state.freePick;
-  el.btnEndTurn.classList.toggle('hidden', !myTurn || state.freePick !== null);
-  el.btnEndTurn.disabled = !me || me.isAI;
-  if (el.buyModeBtn) el.buyModeBtn.disabled = !myTurn || state.freePick !== null;
+  const unresolvedEffect = state.pendingRemoval || state.freePick !== null;
+  const myTurn = state.currentIndex === myId && !state.gameOver && !unresolvedEffect;
+  el.btnEndTurn.classList.toggle('hidden', !myTurn);
+  el.btnEndTurn.disabled = !me || me.isAI || unresolvedEffect;
+  if (el.buyModeBtn) el.buyModeBtn.disabled = !myTurn || paymentMode || selectedWildCardIndex !== null;
 }
 
 /* ---------- interaction ---------- */
@@ -387,20 +527,37 @@ function onHandCardClick(i) {
   const card = state.hands[state.myId][i];
   if (!card) return;
 
-  if (buyMode) {
+  const pending = state.pendingRemoval?.playerIndex === myId ? state.pendingRemoval : null;
+  if (pending) {
+    toggleSelectedCard(i, pending.max);
+  } else if (paymentMode) {
+    const player = state.players[myId];
+    const target = state.route[player.pos + 1];
+    if (target) toggleSelectedCard(i, target.power);
+  } else if (buyMode) {
     // earmark / un-earmark for buying
     send({ type: 'toggle_buy', cardIndex: i });
-  } else if (card.action) {
-    send({ type: 'play_card', cardIndex: i });
+  } else if (card.symbol === 'wild') {
+    selectedWildCardIndex = i;
+    renderHand();
+    renderCardControls();
   } else {
+    selectedWildCardIndex = null;
     send({ type: 'play_card', cardIndex: i });
   }
 }
 
-function onMarketCardClick(i) {
+function toggleSelectedCard(i, limit) {
+  if (selectedCardIndexes.has(i)) selectedCardIndexes.delete(i);
+  else if (selectedCardIndexes.size < limit) selectedCardIndexes.add(i);
+  renderHand();
+  renderCardControls();
+}
+
+function onMarketCardClick(i, cardId) {
   if (state.gameOver || state.currentIndex !== state.myId) return;
   if (state.freePick === state.myId) {
-    send({ type: 'free_pick', marketIndex: i });
+    send({ type: 'free_pick', cardId });
   } else {
     send({ type: 'buy_card', marketIndex: i });
   }

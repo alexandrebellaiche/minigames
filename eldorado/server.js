@@ -7,10 +7,12 @@
  * Protocol (JSON over WebSocket):
  *   C->S {type:'join', name, mode ('ai'|'2p'), map, room?}
  *   S->C {type:'joined', playerId, color, roomId, state}
- *   C->S {type:'play_card', cardIndex}
+ *   C->S {type:'play_card', cardIndex, chosenSymbol?}
  *   C->S {type:'toggle_buy', cardIndex}
  *   C->S {type:'buy_card', marketIndex}
- *   C->S {type:'free_pick', marketIndex}   (after Transmitter)
+ *   C->S {type:'free_pick', cardId}         (after Transmitter)
+ *   C->S {type:'enter_special', cardIndexes}
+ *   C->S {type:'remove_cards', cardIndexes}
  *   C->S {type:'end_turn'}
  *   S->C {type:'state', state}             (broadcast after every change)
  *   S->C {type:'error', message}
@@ -39,38 +41,44 @@ const CARD_LIBRARY = {
   sailor:    { id: 'sailor',    name: 'Sailor',    symbol: 'paddle',  power: 1, cost: 0 },
   explorer:  { id: 'explorer',  name: 'Explorer',  symbol: 'machete', power: 1, cost: 0 },
   traveler:  { id: 'traveler',  name: 'Traveler',  symbol: 'coin',    power: 1, cost: 0 },
-  scout:     { id: 'scout',     name: 'Scout',     symbol: 'machete', power: 2, cost: 2 },
-  guide:     { id: 'guide',     name: 'River Guide', symbol: 'paddle', power: 2, cost: 2 },
-  merchant:  { id: 'merchant',  name: 'Merchant',  symbol: 'coin',    power: 2, cost: 2 },
-  trailblazer:{ id: 'trailblazer', name: 'Trailblazer', symbol: 'machete', power: 3, cost: 4 },
-  waterman:  { id: 'waterman',  name: 'Waterman',  symbol: 'paddle',  power: 3, cost: 4 },
-  trader:    { id: 'trader',    name: 'Trader',    symbol: 'coin',    power: 3, cost: 4 },
-  navigator: { id: 'navigator', name: 'Navigator', symbol: 'machete', power: 4, cost: 6 },
-  voyager:   { id: 'voyager',   name: 'Voyager',   symbol: 'paddle',  power: 4, cost: 6 },
-  tycoon:    { id: 'tycoon',    name: 'Tycoon',    symbol: 'coin',    power: 4, cost: 6 },
-  scientist: { id: 'scientist', name: 'Scientist', symbol: null, power: 0, cost: 3, action: true },
-  transmitter:{ id: 'transmitter', name: 'Transmitter', symbol: null, power: 0, cost: 4, action: true },
-  cartographer:{ id: 'cartographer', name: 'Cartographer', symbol: null, power: 0, cost: 3, action: true },
-  compass:   { id: 'compass',   name: 'Compass',   symbol: null, power: 0, cost: 2, action: true },
-  travelLog: { id: 'travelLog', name: 'Travel Log', symbol: null, power: 0, cost: 4, action: true },
-  native:    { id: 'native',    name: 'Native',    symbol: null, power: 0, cost: 2, action: true },
+  scout:     { id: 'scout',     name: 'Scout',     symbol: 'machete', power: 2, cost: 1 },
+  trailblazer:{ id: 'trailblazer', name: 'Trailblazer', symbol: 'machete', power: 3, cost: 3 },
+  pioneer:   { id: 'pioneer',   name: 'Pioneer',   symbol: 'machete', power: 5, cost: 5 },
+  giantMachete: { id: 'giantMachete', name: 'Giant Machete', symbol: 'machete', power: 6, cost: 3, oneUse: true },
+  captain:   { id: 'captain',   name: 'Captain',   symbol: 'paddle', power: 3, cost: 2 },
+  photographer: { id: 'photographer', name: 'Photographer', symbol: 'coin', power: 2, cost: 2 },
+  journalist: { id: 'journalist', name: 'Journalist', symbol: 'coin', power: 3, cost: 3 },
+  treasureChest: { id: 'treasureChest', name: 'Treasure Chest', symbol: 'coin', power: 4, cost: 3 },
+  millionaire: { id: 'millionaire', name: 'Millionaire', symbol: 'coin', power: 4, cost: 5 },
+  jackOfAllTrades: { id: 'jackOfAllTrades', name: 'Jack of All Trades', symbol: 'wild', power: 1, cost: 2 },
+  adventurer: { id: 'adventurer', name: 'Adventurer', symbol: 'wild', power: 2, cost: 4 },
+  propPlane: { id: 'propPlane', name: 'Prop Plane', symbol: 'wild', power: 4, cost: 4, oneUse: true },
+  transmitter: { id: 'transmitter', name: 'Transmitter', symbol: 'action', power: 0, cost: 4, action: true, oneUse: true },
+  cartographer: { id: 'cartographer', name: 'Cartographer', symbol: 'action', power: 0, cost: 4, action: true },
+  compass:   { id: 'compass',   name: 'Compass',   symbol: 'action', power: 0, cost: 2, action: true, oneUse: true },
+  travelLog: { id: 'travelLog', name: 'Travel Log', symbol: 'action', power: 0, cost: 3, action: true, oneUse: true },
+  scientist: { id: 'scientist', name: 'Scientist', symbol: 'action', power: 0, cost: 4, action: true, oneUse: true },
+  native:    { id: 'native',    name: 'Native',    symbol: 'action', power: 0, cost: 5, action: true },
 };
 
 const MARKET_DECK_IDS = [
   'scout','scout','scout',
-  'guide','guide','guide',
-  'merchant','merchant','merchant',
   'trailblazer','trailblazer','trailblazer',
-  'waterman','waterman','waterman',
-  'trader','trader','trader',
-  'navigator','navigator','navigator',
-  'voyager','voyager','voyager',
-  'tycoon','tycoon','tycoon',
-  'scientist','scientist','scientist',
+  'pioneer','pioneer','pioneer',
+  'giantMachete','giantMachete','giantMachete',
+  'captain','captain','captain',
+  'photographer','photographer','photographer',
+  'journalist','journalist','journalist',
+  'treasureChest','treasureChest','treasureChest',
+  'millionaire','millionaire','millionaire',
+  'jackOfAllTrades','jackOfAllTrades','jackOfAllTrades',
+  'adventurer','adventurer','adventurer',
+  'propPlane','propPlane','propPlane',
   'transmitter','transmitter','transmitter',
   'cartographer','cartographer','cartographer',
   'compass','compass','compass',
   'travelLog','travelLog','travelLog',
+  'scientist','scientist','scientist',
   'native','native','native',
 ];
 
@@ -162,7 +170,7 @@ function newCard(id) {
 function cardCoinValue(card) {
   if (!card) return 0;
   if (card.symbol === 'coin') return card.power;
-  return card.power / 2;
+  return 0.5;
 }
 
 function terrainFor(space) {
@@ -190,6 +198,7 @@ class Game {
       deck: shuffle(STARTING_DECK_IDS.map(id => newCard(id))),
       hand: [],
       discard: [],
+      played: [],
       blockades: 0,
     }));
     this.currentIndex = 0;
@@ -203,6 +212,7 @@ class Game {
     this.finalRound = false;
     this.finishedOrder = [];
     this.freePick = null; // {playerIndex} when Transmitter awaits a pick
+    this.pendingRemoval = null;
     this.message = 'Expedition begins.';
 
     this.refillMarket();
@@ -219,10 +229,20 @@ class Game {
     }
   }
 
+  availableMarketPiles() {
+    const counts = new Map();
+    [...this.marketDeck, ...this.market.filter(Boolean)].forEach(card => {
+      counts.set(card.id, (counts.get(card.id) || 0) + 1);
+    });
+    return [...counts]
+      .sort(([a], [b]) => CARD_LIBRARY[a].name.localeCompare(CARD_LIBRARY[b].name))
+      .map(([id, count]) => ({ ...newCard(id), count }));
+  }
+
   /* ---------- deck / draw ---------- */
 
   drawCards(p, n) {
-    while (p.hand.length < n && (p.deck.length > 0 || p.discard.length > 0)) {
+    for (let i = 0; i < n; i++) {
       if (p.deck.length === 0) {
         p.deck = shuffle(p.discard);
         p.discard = [];
@@ -243,7 +263,7 @@ class Game {
     return this.players.some(other => other.pos === pos);
   }
 
-  movementRange(p, card) {
+  movementRange(p, card, chosenSymbol = card.symbol) {
     let pos = p.pos;
     let power = card.power;
     let steps = 0;
@@ -251,9 +271,10 @@ class Game {
       const next = this.route[pos + 1];
       if (next.terrain === 'mountain') break;
       if (this.occupied(pos + 1)) break;
+      if (next.terrain === 'rubble' || next.terrain === 'camp') break;
       const t = terrainFor(next);
       if (next.power > 0) {
-        if (!t.any && card.symbol !== t.req) break;
+        if (!t.any && chosenSymbol !== t.req) break;
         if (power < next.power) break;
         power -= next.power;
       }
@@ -264,19 +285,20 @@ class Game {
     return { pos, steps };
   }
 
-  playMovementCard(p, cardIndex) {
+  playMovementCard(p, cardIndex, chosenSymbol) {
     const card = p.hand[cardIndex];
     if (!card || card.action) return null;
-    const { pos, steps } = this.movementRange(p, card);
+    if (card.symbol === 'wild' && !['machete', 'paddle', 'coin'].includes(chosenSymbol)) return null;
+    const movementSymbol = card.symbol === 'wild' ? chosenSymbol : card.symbol;
+    const { pos, steps } = this.movementRange(p, card, movementSymbol);
     if (steps === 0) return null;
 
     p.hand.splice(cardIndex, 1);
     const space = this.route[pos];
-    if (space.terrain === 'camp') {
-      // Base Camp: card removed from the game (deck thinning)
-      this.message = `Moved ${steps} space(s) — ${card.name} removed at Base Camp.`;
+    if (card.oneUse) {
+      this.message = `${card.name} removed from the game after moving ${steps} space(s).`;
     } else {
-      p.discard.push(card);
+      p.played.push(card);
       this.message = `Moved ${steps} space(s).`;
     }
     p.pos = pos;
@@ -284,16 +306,65 @@ class Game {
     return { pos, steps };
   }
 
+  enterSpecialSpace(playerIndex, cardIndexes) {
+    const p = this.players[playerIndex];
+    if (playerIndex !== this.currentIndex || this.gameOver || this.freePick !== null || this.pendingRemoval) {
+      return { ok: false, error: 'Cannot enter that space now.' };
+    }
+    if (!Array.isArray(cardIndexes)) return { ok: false, error: 'Select cards to spend.' };
+    const targetIndex = p.pos + 1;
+    const target = this.route[targetIndex];
+    if (!target || !['rubble', 'camp'].includes(target.terrain)) {
+      return { ok: false, error: 'The next space does not require cards.' };
+    }
+    if (this.occupied(targetIndex)) return { ok: false, error: 'That space is occupied.' };
+    const needed = target.power;
+    const indexes = [...new Set(cardIndexes)];
+    if (indexes.length !== cardIndexes.length || indexes.length !== needed || indexes.some(index => !Number.isInteger(index) || index < 0 || index >= p.hand.length)) {
+      return { ok: false, error: `Select exactly ${needed} card(s).` };
+    }
+    const spent = indexes.sort((a, b) => b - a).map(index => p.hand.splice(index, 1)[0]);
+    if (target.terrain === 'rubble') p.discard.push(...spent);
+    p.pos = targetIndex;
+    this.message = target.terrain === 'camp'
+      ? 'Entered Base Camp — cards spent were removed from the game.'
+      : 'Entered Rubble — cards spent were discarded.';
+    this.broadcast();
+    return { ok: true };
+  }
+
+  removeCards(playerIndex, cardIndexes) {
+    const pending = this.pendingRemoval;
+    const p = this.players[playerIndex];
+    if (!pending || pending.playerIndex !== playerIndex || playerIndex !== this.currentIndex) {
+      return { ok: false, error: 'There is no card removal pending.' };
+    }
+    if (!Array.isArray(cardIndexes)) return { ok: false, error: 'Select cards to remove.' };
+    const indexes = [...new Set(cardIndexes)];
+    if (indexes.length !== cardIndexes.length || indexes.length > pending.max || indexes.some(index => !Number.isInteger(index) || index < 0 || index >= p.hand.length)) {
+      return { ok: false, error: `Remove up to ${pending.max} card(s).` };
+    }
+    indexes.sort((a, b) => b - a).forEach(index => p.hand.splice(index, 1));
+    this.pendingRemoval = null;
+    this.message = indexes.length
+      ? `Removed ${indexes.length} card(s) from the game.`
+      : 'Kept all remaining cards.';
+    this.broadcast();
+    return { ok: true };
+  }
+
   /* ---------- actions ---------- */
 
   playActionCard(p, cardIndex) {
     const card = p.hand[cardIndex];
     if (!card || !card.action) return false;
-    p.hand.splice(cardIndex, 1); // action cards are removed from the game after use
+    p.hand.splice(cardIndex, 1);
+    if (!card.oneUse) p.played.push(card);
 
     switch (card.id) {
       case 'scientist':
         this.drawCards(p, 1);
+        this.pendingRemoval = { playerIndex: this.currentIndex, max: 1 };
         this.message = `${card.name}: drew 1 card.`;
         break;
       case 'transmitter':
@@ -310,6 +381,7 @@ class Game {
         break;
       case 'travelLog':
         this.drawCards(p, 2);
+        this.pendingRemoval = { playerIndex: this.currentIndex, max: 2 };
         this.message = `${card.name}: drew 2 cards.`;
         break;
       case 'native': {
@@ -330,10 +402,10 @@ class Game {
 
   /* ---------- public play entry ---------- */
 
-  playCard(playerIndex, cardIndex) {
+  playCard(playerIndex, cardIndex, chosenSymbol) {
     const p = this.players[playerIndex];
     if (playerIndex !== this.currentIndex) return { ok: false, error: 'Not your turn.' };
-    if (this.gameOver || this.freePick !== null) return { ok: false, error: 'Cannot play now.' };
+    if (this.gameOver || this.freePick !== null || this.pendingRemoval) return { ok: false, error: 'Cannot play now.' };
     const card = p.hand[cardIndex];
     if (!card) return { ok: false, error: 'No card.' };
 
@@ -342,7 +414,7 @@ class Game {
     if (card.action) {
       this.playActionCard(p, cardIndex);
     } else {
-      const res = this.playMovementCard(p, cardIndex);
+      const res = this.playMovementCard(p, cardIndex, chosenSymbol);
       if (!res) { ok = false; error = 'Cannot move with that card.'; }
     }
     this.broadcast(); // always sync state so clients stay in lockstep
@@ -351,8 +423,7 @@ class Game {
 
   toggleBuy(cardIndex) {
     const p = this.players[this.currentIndex];
-    if (!p) return;
-    if (this.gameOver || this.freePick !== null) return;
+    if (!p || this.gameOver || this.freePick !== null || this.pendingRemoval) return;
     const card = p.hand[cardIndex];
     if (!card) return;
     const i = this.buyCandidates.indexOf(cardIndex);
@@ -363,13 +434,23 @@ class Game {
   }
 
   /* free pick from Transmitter */
-  freePickCard(playerIndex, marketIndex) {
+  freePickCard(playerIndex, cardId) {
     if (this.freePick !== playerIndex) return { ok: false, error: 'No free pick pending.' };
-    const card = this.market[marketIndex];
-    if (!card) return { ok: false, error: 'No card there.' };
+    if (!CARD_LIBRARY[cardId] || !MARKET_DECK_IDS.includes(cardId)) {
+      return { ok: false, error: 'That card is not in the marketplace.' };
+    }
+    const marketIndex = this.market.findIndex(card => card && card.id === cardId);
+    let card;
+    if (marketIndex >= 0) {
+      card = this.market[marketIndex];
+      this.market[marketIndex] = null;
+    } else {
+      const deckIndex = this.marketDeck.findIndex(item => item.id === cardId);
+      if (deckIndex < 0) return { ok: false, error: 'That supply pile is empty.' };
+      [card] = this.marketDeck.splice(deckIndex, 1);
+    }
     const p = this.players[playerIndex];
     p.discard.push(card);
-    this.market[marketIndex] = null;
     this.refillMarket();
     this.freePick = null;
     this.message = `Took ${card.name} for free via Transmitter.`;
@@ -380,7 +461,7 @@ class Game {
   buyCard(playerIndex, marketIndex) {
     const p = this.players[playerIndex];
     if (playerIndex !== this.currentIndex) return { ok: false, error: 'Not your turn.' };
-    if (this.gameOver || this.buyUsed || this.freePick !== null) return { ok: false, error: 'Cannot buy now.' };
+    if (this.gameOver || this.buyUsed || this.freePick !== null || this.pendingRemoval) return { ok: false, error: 'Cannot buy now.' };
     const card = this.market[marketIndex];
     if (!card) return { ok: false, error: 'No card there.' };
     if (this.coins < card.cost - 1e-9) return { ok: false, error: 'Not enough coins.' };
@@ -405,10 +486,11 @@ class Game {
   /* ---------- turn flow ---------- */
 
   endTurn() {
-    if (this.gameOver) return;
+    if (this.gameOver || this.freePick !== null || this.pendingRemoval) return;
     const p = this.players[this.currentIndex];
-    p.discard.push(...p.hand);
+    p.discard.push(...p.hand, ...p.played);
     p.hand = [];
+    p.played = [];
     this.coins = 0;
     this.buyCandidates = [];
     this.buyUsed = false;
@@ -470,25 +552,63 @@ class Game {
     if (!p.isAI) return;
 
     let safety = 0;
-    while (safety++ < 30) {
+    while (safety++ < 50) {
+      const actionIndex = p.hand.findIndex(card => card.action);
+      if (actionIndex >= 0) {
+        this.playActionCard(p, actionIndex);
+        if (this.pendingRemoval) this.removeCards(this.currentIndex, []);
+        if (this.freePick === this.currentIndex) {
+          const pick = this.availableMarketPiles()
+            .sort((a, b) => b.power - a.power || a.cost - b.cost)[0];
+          if (pick) this.freePickCard(this.currentIndex, pick.id);
+          else {
+            this.freePick = null;
+            this.message = 'No marketplace cards remain.';
+            this.broadcast();
+          }
+        } else {
+          this.broadcast();
+        }
+        if (this.gameOver) return;
+        continue;
+      }
+
       // try best movement
-      let bestIdx = -1, bestSteps = -1;
-      p.hand.forEach((c, i) => {
-        if (c.action) return;
-        const r = this.movementRange(p, c);
-        if (r.steps > bestSteps) { bestSteps = r.steps; bestIdx = i; }
+      let bestIdx = -1, bestSteps = 0, bestSymbol;
+      p.hand.forEach((card, i) => {
+        const symbols = card.symbol === 'wild' ? ['machete', 'paddle', 'coin'] : [card.symbol];
+        symbols.forEach(symbol => {
+          const r = this.movementRange(p, card, symbol);
+          if (r.steps > bestSteps) {
+            bestSteps = r.steps;
+            bestIdx = i;
+            bestSymbol = symbol;
+          }
+        });
       });
-      if (bestIdx >= 0 && bestSteps > 0) {
-        this.playMovementCard(p, p.hand[bestIdx]);
+      if (bestIdx >= 0) {
+        this.playMovementCard(p, bestIdx, bestSymbol);
         this.broadcast();
         if (this.gameOver) return;
+        continue;
+      }
+
+      const next = this.route[p.pos + 1];
+      if (
+        next &&
+        !this.occupied(p.pos + 1) &&
+        ['rubble', 'camp'].includes(next.terrain) &&
+        p.hand.length >= next.power
+      ) {
+        this.enterSpecialSpace(this.currentIndex, Array.from({ length: next.power }, (_, i) => i));
         continue;
       }
       break;
     }
 
     // try to buy best affordable card
-    const affordable = this.market.filter((c, i) => c && !this.buyUsed && this.coins >= c.cost - 1e-9);
+    const totalCoins = p.hand.reduce((sum, card) => sum + cardCoinValue(card), 0);
+    const affordable = this.market.filter(c => c && !this.buyUsed && totalCoins >= c.cost - 1e-9);
     if (affordable.length > 0) {
       affordable.sort((a, b) => b.power - a.power || b.cost - a.cost);
       const pick = affordable[0];
@@ -530,7 +650,9 @@ class Game {
       buyCandidates: this.buyCandidates,
       buyUsed: this.buyUsed,
       freePick: this.freePick,
+      pendingRemoval: this.pendingRemoval,
       market: this.market.map(c => c || null),
+      marketSupply: this.availableMarketPiles(),
       route: this.route,
       gameOver: this.gameOver,
       finalRound: this.finalRound,
@@ -615,17 +737,27 @@ const server = http.createServer((req, res) => {
     '/eldorado/style.css': 'eldorado/style.css',
     '/eldorado/game.js': 'eldorado/game.js',
     '/eldorado/DESIGN.md': 'eldorado/DESIGN.md',
-    '/eldorado/artwork/interior/sailor.png': 'eldorado/artwork/interior/sailor.png',
-    '/eldorado/artwork/interior/explorer.png': 'eldorado/artwork/interior/explorer.png',
-    '/eldorado/artwork/interior/traveler.png': 'eldorado/artwork/interior/traveler.png',
-    '/eldorado/artwork/interior/scout.png': 'eldorado/artwork/interior/scout.png',
-    '/eldorado/artwork/interior/trailblazer.png': 'eldorado/artwork/interior/trailblazer.png',
-    '/eldorado/artwork/interior/scientist.png': 'eldorado/artwork/interior/scientist.png',
-    '/eldorado/artwork/interior/transmitter.png': 'eldorado/artwork/interior/transmitter.png',
-    '/eldorado/artwork/interior/cartographer.png': 'eldorado/artwork/interior/cartographer.png',
-    '/eldorado/artwork/interior/compass.png': 'eldorado/artwork/interior/compass.png',
-    '/eldorado/artwork/interior/travel-log.png': 'eldorado/artwork/interior/travel-log.png',
-    '/eldorado/artwork/interior/native.png': 'eldorado/artwork/interior/native.png',
+    '/eldorado/artwork_v2/sailor.png': 'eldorado/artwork_v2/sailor.png',
+    '/eldorado/artwork_v2/explorer.png': 'eldorado/artwork_v2/explorer.png',
+    '/eldorado/artwork_v2/traveler.png': 'eldorado/artwork_v2/traveler.png',
+    '/eldorado/artwork_v2/scout.png': 'eldorado/artwork_v2/scout.png',
+    '/eldorado/artwork_v2/trailblazer.png': 'eldorado/artwork_v2/trailblazer.png',
+    '/eldorado/artwork_v2/pioneer.png': 'eldorado/artwork_v2/pioneer.png',
+    '/eldorado/artwork_v2/giant-machete.png': 'eldorado/artwork_v2/giant-machete.png',
+    '/eldorado/artwork_v2/photographer.png': 'eldorado/artwork_v2/photographer.png',
+    '/eldorado/artwork_v2/journalist.png': 'eldorado/artwork_v2/journalist.png',
+    '/eldorado/artwork_v2/millionaire.png': 'eldorado/artwork_v2/millionaire.png',
+    '/eldorado/artwork_v2/treasure-chest.png': 'eldorado/artwork_v2/treasure-chest.png',
+    '/eldorado/artwork_v2/captain.png': 'eldorado/artwork_v2/captain.png',
+    '/eldorado/artwork_v2/jack-of-all-trades.png': 'eldorado/artwork_v2/jack-of-all-trades.png',
+    '/eldorado/artwork_v2/adventurer.png': 'eldorado/artwork_v2/adventurer.png',
+    '/eldorado/artwork_v2/prop-plane.png': 'eldorado/artwork_v2/prop-plane.png',
+    '/eldorado/artwork_v2/transmitter.png': 'eldorado/artwork_v2/transmitter.png',
+    '/eldorado/artwork_v2/cartographer.png': 'eldorado/artwork_v2/cartographer.png',
+    '/eldorado/artwork_v2/compass.png': 'eldorado/artwork_v2/compass.png',
+    '/eldorado/artwork_v2/travel-log.png': 'eldorado/artwork_v2/travel-log.png',
+    '/eldorado/artwork_v2/scientist.png': 'eldorado/artwork_v2/scientist.png',
+    '/eldorado/artwork_v2/native.png': 'eldorado/artwork_v2/native.png',
     '/style.css': 'eldorado/style.css',
     '/game.js': 'eldorado/game.js',
     '/DESIGN.md': 'eldorado/DESIGN.md',
@@ -721,7 +853,7 @@ wss.on('connection', (ws) => {
     const pi = currentPlayerIndex;
 
     if (type === 'play_card') {
-      const res = game.playCard(pi, msg.cardIndex);
+      const res = game.playCard(pi, msg.cardIndex, msg.chosenSymbol);
       if (!res.ok) ws.send(JSON.stringify({ type: 'error', error: res.error }));
     } else if (type === 'toggle_buy') {
       game.toggleBuy(msg.cardIndex);
@@ -729,7 +861,13 @@ wss.on('connection', (ws) => {
       const res = game.buyCard(pi, msg.marketIndex);
       if (!res.ok) ws.send(JSON.stringify({ type: 'error', error: res.error }));
     } else if (type === 'free_pick') {
-      const res = game.freePickCard(pi, msg.marketIndex);
+      const res = game.freePickCard(pi, msg.cardId);
+      if (!res.ok) ws.send(JSON.stringify({ type: 'error', error: res.error }));
+    } else if (type === 'enter_special') {
+      const res = game.enterSpecialSpace(pi, msg.cardIndexes);
+      if (!res.ok) ws.send(JSON.stringify({ type: 'error', error: res.error }));
+    } else if (type === 'remove_cards') {
+      const res = game.removeCards(pi, msg.cardIndexes);
       if (!res.ok) ws.send(JSON.stringify({ type: 'error', error: res.error }));
     } else if (type === 'start') {
       if (pi === 0 && game.mode === '2p' && r.clients.size >= 2) {
