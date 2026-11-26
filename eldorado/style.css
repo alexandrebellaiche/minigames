@@ -5,20 +5,22 @@
 }
 
 :root {
-  --bg:       #141f15;
-  --surface:  #1e3a24;
-  --panel:    #274a2f;
-  --text:     #e8efe6;
-  --muted:    #9fb09f;
-  --accent:   #d4af37;
-  --accent-dim: #a8861e;
+  --bg:       #18181e;
+  --surface:  #24232c;
+  --panel:    #302e3a;
+  --text:     #f0edf2;
+  --muted:    #b7b0bd;
+  --accent:   #e57c57;
+  --accent-dim: #ae533c;
+  --control-border: #4b4656;
+  --control-bg: #201f27;
   --jungle:   #3a7d44;
   --river:    #2f6db5;
   --village:  #c9a227;
   --rubble:   #8a7d68;
   --camp:     #b5484a;
   --mountain: #3a3a3a;
-  --gold:     #d4af37;
+  --gold:     #f09a62;
   --card-machete: #bdd4bd;
   --card-paddle:  #bfd0e1;
   --card-coin:    #e2d4ad;
@@ -101,7 +103,7 @@ h1 {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
-  border: 1px solid #2d5a3a;
+  border: 1px solid var(--control-border);
 }
 
 .setting-row {
@@ -123,8 +125,8 @@ h1 {
   flex: 1;
   padding: 0.25rem 0.5rem;
   border-radius: 5px;
-  border: 1px solid #2d5a3a;
-  background: #142716;
+  border: 1px solid var(--control-border);
+  background: var(--control-bg);
   color: var(--text);
   font-size: 0.85rem;
 }
@@ -133,8 +135,8 @@ h1 {
   flex: 1;
   padding: 0.25rem 0.5rem;
   border-radius: 5px;
-  border: 1px solid #2d5a3a;
-  background: #142716;
+  border: 1px solid var(--control-border);
+  background: var(--control-bg);
   color: var(--text);
   font-size: 0.85rem;
 }
@@ -151,14 +153,14 @@ h1 {
   gap: 0;
   border-radius: 8px;
   overflow: hidden;
-  border: 1px solid #2d5a3a;
+  border: 1px solid var(--control-border);
   flex: 1;
 }
 
 .mode-btn {
   padding: 0.35rem 0.9rem;
   border: none;
-  background: #142716;
+  background: var(--control-bg);
   color: var(--muted);
   font-size: 0.85rem;
   font-weight: 600;
@@ -202,7 +204,7 @@ h1 {
 /* Waiting panel */
 .panel {
   background: var(--surface);
-  border: 1px solid #2d5a3a;
+  border: 1px solid var(--control-border);
   border-radius: 10px;
   padding: 1rem 1.2rem;
   width: 100%;
@@ -406,7 +408,7 @@ h1 {
   cursor: pointer;
   user-select: none;
   transition: transform 0.1s, border-color 0.15s, box-shadow 0.15s;
-  background: linear-gradient(180deg, #2d4a33 0%, #223828 100%);
+  background: linear-gradient(180deg, #393642 0%, #272530 100%);
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.1), 0 3px 8px rgba(0,0,0,0.4);
 }
 
@@ -494,7 +496,7 @@ h1 {
 }
 
 .market-card:hover { filter: brightness(1.08); transform: translateY(-2px); }
-.market-card.empty { cursor: default; background: #1d2820; border-style: dashed; }
+.market-card.empty { cursor: default; background: #272530; border-style: dashed; }
 .market-card.unaffordable { opacity: 0.55; }
 .market-card .stock-count {
   position: absolute;
@@ -518,7 +520,7 @@ h1 {
   overflow: hidden;
   padding: 0;
   border-width: 3px;
-  background: #17251a;
+  background: #272530;
   color: #fff;
 }
 
