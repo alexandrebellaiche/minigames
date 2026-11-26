@@ -263,19 +263,23 @@ h1 {
 
 /* Map / route */
 .map {
+  --hex-width: 56px;
+  --hex-height: 64px;
   width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
   padding: 0.5rem 0;
-  display: flex;
-  gap: 0.35rem;
-  align-items: center;
   scrollbar-width: thin;
 }
 
+.map-track {
+  position: relative;
+  margin: 0 auto;
+}
+
 .hex {
-  width: 56px;
-  height: 64px;
-  flex: 0 0 auto;
+  width: var(--hex-width);
+  height: var(--hex-height);
   border-radius: 8px;
   clip-path: polygon(25% 0, 75% 0, 100% 50%, 75% 100%, 25% 100%, 0 50%);
   display: flex;
@@ -284,7 +288,7 @@ h1 {
   justify-content: center;
   gap: 0.2rem;
   border: 2px solid rgba(0,0,0,0.35);
-  position: relative;
+  position: absolute;
   user-select: none;
 }
 

@@ -26,6 +26,7 @@
 
 ### Maps
 - Preset linear routes mimicking the game's suggested set layouts (Beginner / Standard / Advanced).
+- The client lays each route out as staggered, edge-sharing hex tiles; the server keeps the route as a linear sequence for movement.
 - Each route ends at the gate to El Dorado. Route is chosen when the room is created.
 
 ### Action cards (implemented in this release)

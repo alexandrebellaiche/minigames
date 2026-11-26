@@ -200,9 +200,21 @@ function renderHud() {
 
 function renderMap() {
   el.map.innerHTML = '';
+  const mapStyles = getComputedStyle(el.map);
+  const hexWidth = parseFloat(mapStyles.getPropertyValue('--hex-width'));
+  const hexHeight = parseFloat(mapStyles.getPropertyValue('--hex-height'));
+  const hexStep = hexWidth * 0.75;
+  const mapTrack = document.createElement('div');
+  mapTrack.className = 'map-track';
+  mapTrack.style.width = `${hexWidth + (state.route.length - 1) * hexStep}px`;
+  mapTrack.style.height = `${hexHeight * 1.5}px`;
+  el.map.appendChild(mapTrack);
+
   state.route.forEach((space, i) => {
     const hex = document.createElement('div');
     hex.className = `hex ${space.terrain}${space.gate ? ' dorado' : ''}`;
+    hex.style.left = `${i * hexStep}px`;
+    hex.style.top = `${i % 2 === 0 ? hexHeight / 2 : 0}px`;
     hex.style.backgroundColor = {
       jungle: '#3a7d44', river: '#2f6db5', village: '#c9a227',
       rubble: '#8a7d68', camp: '#b5484a', mountain: '#353535',
@@ -228,7 +240,7 @@ function renderMap() {
       }
     });
     hex.appendChild(pieces);
-    el.map.appendChild(hex);
+    mapTrack.appendChild(hex);
   });
 }
 
