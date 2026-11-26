@@ -634,8 +634,8 @@ h1 {
 }
 
 .card-preview-card.card {
-  width: 160px;
-  height: 249px;
+  width: 240px;
+  height: 374px;
   padding: 0;
   cursor: default;
   border-radius: 14px;
@@ -665,13 +665,13 @@ h1 {
   pointer-events: none;
 }
 
-.card-preview-content p { top: 178px; font-size: 0.945rem; line-height: 1.08; letter-spacing: -0.025em; }
+.card-preview-content p { top: 267px; width: 222px; font-size: 0.945rem; line-height: 1.08; letter-spacing: -0.025em; }
 
 .card-preview-close {
   position: absolute;
   z-index: 2;
   top: -0.5rem;
-  right: calc(50% - 96px);
+  right: calc(50% - 136px);
   width: 1.8rem;
   height: 1.8rem;
   border: 0;
@@ -683,7 +683,7 @@ h1 {
   cursor: pointer;
 }
 
-.card-preview-content .btn-primary { min-width: 160px; }
+.card-preview-content .btn-primary { min-width: 240px; }
 
 /* Buttons */
 .btn-primary {
