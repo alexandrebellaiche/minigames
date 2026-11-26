@@ -12,6 +12,7 @@ const MAPS = {
 const SYMBOL_CHAR = { machete: '🌿', paddle: '🌊', coin: '🪙' };
 
 let ws;
+const pendingMessages = [];
 let myId = null;
 let myColor = null;
 let state = null;
@@ -57,6 +58,10 @@ function connect() {
 
   ws.onopen = () => {
     ws.send(JSON.stringify({ type: 'hello' }));
+    while (pendingMessages.length > 0) {
+      ws.send(JSON.stringify(pendingMessages.shift()));
+    }
+    setConnectMessage('');
   };
 
   ws.onmessage = (event) => {
@@ -93,13 +98,24 @@ function connect() {
     if (state && !state.gameOver) setConnectMessage('Disconnected from server.');
     ws = null;
   };
+
+  ws.onerror = () => {
+    setConnectMessage('Unable to connect to the game server.');
+  };
 }
 
 function send(obj) {
-  if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj));
+  if (ws && ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify(obj));
+  } else if (ws && ws.readyState === WebSocket.CONNECTING) {
+    pendingMessages.push(obj);
+  } else {
+    setConnectMessage('Not connected to the game server. Please reload and try again.');
+  }
 }
 
 function populateMaps(mapKeys) {
+  const selectedMap = el.inputMap.value;
   el.inputMap.innerHTML = '';
   mapKeys.forEach((k) => {
     const o = document.createElement('option');
@@ -107,6 +123,7 @@ function populateMaps(mapKeys) {
     o.textContent = `${MAPS[k] ? MAPS[k].name : k} — ${MAPS[k] ? MAPS[k].desc : ''}`;
     el.inputMap.appendChild(o);
   });
+  if (mapKeys.includes(selectedMap)) el.inputMap.value = selectedMap;
 }
 
 /* ---------- screens ---------- */
@@ -324,6 +341,7 @@ function showGameOver() {
 /* ---------- init ---------- */
 
 function init() {
+  populateMaps(Object.keys(MAPS));
   connect();
 
   el.btnCreate.addEventListener('click', () => {

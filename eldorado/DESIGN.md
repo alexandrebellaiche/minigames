@@ -15,7 +15,8 @@
 
 ### Networked multiplayer
 - **Server-authoritative** Node.js + WebSocket game server (`server.js`).
-- The same HTTP process serves the static files (`index.html`, `style.css`, `game.js`) and the WebSocket endpoint, so players on different devices just open the same URL.
+- The same HTTP process serves the minigame hub, each game's static files, and the WebSocket endpoint. The El Dorado client connects to that same host and port.
+- Start the server from the repository root with `make serve`, or open El Dorado directly with `make serve-eldorado`. Install the server dependency first with `cd eldorado && npm install`.
 - Two players join the same room; the server validates every move and broadcasts full state to both clients. No game logic lives in the browser (prevents desync/cheating).
 - Solo mode plays against a simple server-side AI that takes its turns automatically.
 

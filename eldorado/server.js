@@ -22,7 +22,7 @@ const path = require('path');
 const { WebSocketServer } = require('ws');
 
 const PORT = process.env.PORT || 8666;
-const ROOT = __dirname; // eldorado folder
+const ROOT = path.resolve(__dirname, '..');
 
 /* ---------- card library ---------- */
 
@@ -599,10 +599,27 @@ function serveStatic(res, file) {
 
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
-  if (url.pathname === '/' || url.pathname === '/index.html') return serveStatic(res, 'index.html');
-  if (url.pathname === '/style.css') return serveStatic(res, 'style.css');
-  if (url.pathname === '/game.js') return serveStatic(res, 'game.js');
-  if (url.pathname === '/DESIGN.md') return serveStatic(res, 'DESIGN.md');
+  const files = {
+    '/': 'index.html',
+    '/index.html': 'index.html',
+    '/mastermind/': 'mastermind/index.html',
+    '/mastermind/index.html': 'mastermind/index.html',
+    '/mastermind/style.css': 'mastermind/style.css',
+    '/mastermind/game.js': 'mastermind/game.js',
+    '/darkroom/': 'darkroom/index.html',
+    '/darkroom/index.html': 'darkroom/index.html',
+    '/darkroom/style.css': 'darkroom/style.css',
+    '/darkroom/game.js': 'darkroom/game.js',
+    '/eldorado/': 'eldorado/index.html',
+    '/eldorado/index.html': 'eldorado/index.html',
+    '/eldorado/style.css': 'eldorado/style.css',
+    '/eldorado/game.js': 'eldorado/game.js',
+    '/eldorado/DESIGN.md': 'eldorado/DESIGN.md',
+    '/style.css': 'eldorado/style.css',
+    '/game.js': 'eldorado/game.js',
+    '/DESIGN.md': 'eldorado/DESIGN.md',
+  };
+  if (files[url.pathname]) return serveStatic(res, files[url.pathname]);
   res.writeHead(404, { 'Content-Type': 'text/plain' });
   res.end('Not found');
 });
