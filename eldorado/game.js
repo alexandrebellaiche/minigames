@@ -356,8 +356,8 @@ function renderMap() {
 
 function renderHand() {
   el.hand.innerHTML = '';
-  const me = state.players[state.myId !== undefined ? state.myId : myId];
-  const hand = state.hands && state.hands[state.myId !== undefined ? state.myId : myId];
+  const me = state.players[myId];
+  const hand = state.hands && state.hands[myId];
   if (!hand) return;
 
   hand.forEach((card, i) => {
@@ -422,7 +422,7 @@ function renderMarket() {
     return;
   }
 
-  const me = state.players[state.myId !== undefined ? state.myId : myId];
+  const me = state.players[myId];
   state.market.forEach((card, i) => {
     const elCard = document.createElement('div');
     const affordable = card && state.coins >= card.cost - 1e-9 && !state.buyUsed;
@@ -548,7 +548,7 @@ function renderMessage() {
 }
 
 function renderEndTurn() {
-  const me = state.players[state.myId !== undefined ? state.myId : myId];
+  const me = state.players[myId];
   const unresolvedEffect = state.pendingRemoval || state.freePick !== null;
   const myTurn = state.currentIndex === myId && !state.gameOver && !unresolvedEffect;
   el.btnEndTurn.classList.toggle('hidden', !myTurn);
@@ -559,8 +559,8 @@ function renderEndTurn() {
 /* ---------- interaction ---------- */
 
 function onHandCardClick(i) {
-  if (state.freePick !== null || state.gameOver || state.currentIndex !== state.myId) return;
-  const card = state.hands[state.myId][i];
+  if (state.freePick !== null || state.gameOver || state.currentIndex !== myId) return;
+  const card = state.hands[myId][i];
   if (!card) return;
 
   const pending = state.pendingRemoval?.playerIndex === myId ? state.pendingRemoval : null;
@@ -597,8 +597,8 @@ function toggleSelectedCard(i, limit) {
 }
 
 function onMarketCardClick(i, cardId) {
-  if (state.gameOver || state.currentIndex !== state.myId) return;
-  if (state.freePick === state.myId) {
+  if (state.gameOver || state.currentIndex !== myId) return;
+  if (state.freePick === myId) {
     send({ type: 'free_pick', cardId });
   } else {
     send({ type: 'buy_card', marketIndex: i });
@@ -632,7 +632,7 @@ function closeCardPreview() {
 /* ---------- game over ---------- */
 
 function showGameOver() {
-  const me = state.players[state.myId];
+  const me = state.players[myId];
   const winnerId = state.finishedOrder[0];
   const winner = state.players.find((p) => p.id === winnerId);
   const youWon = winnerId === myId;
