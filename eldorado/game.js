@@ -7,9 +7,12 @@ const MAPS = {
   classic: { name: 'The Classic Route', desc: 'Beginner — mixed terrain, short path' },
   jungle:  { name: 'Jungle Crawl',      desc: 'Standard — heavy jungle, river crossings' },
   river:   { name: 'River Run',         desc: 'Advanced — long river & village stretches' },
+  isthmus: { name: 'The Isthmus',       desc: 'Expert — narrow jungle neck with river detour' },
+  delta:   { name: 'The River Delta',   desc: 'Expert — many villages, rubble, and base camps' },
 };
 
 const SYMBOL_CHAR = { machete: '🌿', paddle: '🌊', coin: '🪙', wild: '⚪' };
+
 const CARD_ARTWORK = {
   sailor: 'sailor',
   explorer: 'explorer',
@@ -50,7 +53,7 @@ const pendingMessages = [];
 let myId = null;
 let myColor = null;
 let state = null;
-let buyMode = false; // when true, hand clicks earmark for buying; when false, they play for movement
+let buyMode = false;
 let selectedCardIndexes = new Set();
 let selectedWildCardIndex = null;
 let paymentMode = false;
@@ -93,7 +96,7 @@ const el = {
   btnEndTurn: document.getElementById('btn-end-turn'),
   goTitle: document.getElementById('go-title'),
   goDetail: document.getElementById('go-detail'),
-  buyModeBtn: null, // created below
+  buyModeBtn: null,
 };
 
 /* ---------- connection ---------- */
@@ -110,33 +113,37 @@ function connect() {
   };
 
   ws.onmessage = (event) => {
-    const msg = JSON.parse(event.data);
-    switch (msg.type) {
-      case 'hello':
-        populateMaps(msg.maps || Object.keys(MAPS));
-        break;
-      case 'joined':
-        myId = msg.playerId;
-        myColor = msg.color;
-        state = msg.state;
-        showScreen('waiting');
-        renderWaiting();
-        break;
-      case 'state':
-        state = msg.state;
-        myId = msg.you !== undefined ? msg.you : myId;
-        if (state.gameOver) {
-          showScreen('game');
-          showGameOver();
-        } else {
-          showScreen('game');
-          render();
-        }
-        break;
-      case 'error':
-        if (state) el.message.textContent = msg.error;
-        else setConnectMessage(msg.error);
-        break;
+    try {
+      const msg = JSON.parse(event.data);
+      switch (msg.type) {
+        case 'hello':
+          populateMaps(msg.maps || Object.keys(MAPS));
+          break;
+        case 'joined':
+          myId = msg.playerId;
+          myColor = msg.color;
+          state = msg.state;
+          showScreen('waiting');
+          renderWaiting();
+          break;
+        case 'state':
+          state = msg.state;
+          myId = msg.you !== undefined ? msg.you : myId;
+          if (state.gameOver) {
+            showScreen('game');
+            showGameOver();
+          } else {
+            showScreen('game');
+            render();
+          }
+          break;
+        case 'error':
+          if (state) el.message.textContent = msg.error;
+          else setConnectMessage(msg.error);
+          break;
+      }
+    } catch (e) {
+      console.error('WS message error:', e);
     }
   };
 
@@ -161,6 +168,7 @@ function send(obj) {
 }
 
 function populateMaps(mapKeys) {
+  if (!el.inputMap) return;
   const selectedMap = el.inputMap.value;
   el.inputMap.innerHTML = '';
   mapKeys.forEach((k) => {
@@ -228,7 +236,6 @@ function renderHud() {
   el.phaseLabel.textContent = `Phase: ${state.phase.charAt(0).toUpperCase() + state.phase.slice(1)}`;
   el.coins.textContent = `Coins: ${state.coins}`;
 
-  // buy mode toggle
   if (!el.buyModeBtn) {
     el.buyModeBtn = document.createElement('button');
     el.buyModeBtn.className = 'btn-secondary btn-sm';
@@ -253,13 +260,13 @@ function renderHud() {
 function renderMap() {
   el.map.innerHTML = '';
   const mapStyles = getComputedStyle(el.map);
-  const hexWidth = parseFloat(mapStyles.getPropertyValue('--hex-width'));
-  const hexHeight = parseFloat(mapStyles.getPropertyValue('--hex-height'));
+  const hexWidth = parseFloat(mapStyles.getPropertyValue('--hex-width')) || 56;
+  const hexHeight = parseFloat(mapStyles.getPropertyValue('--hex-height')) || 64;
   const hexStep = hexWidth * 0.75;
   const bundleSize = 5;
   const bundleColumns = 3;
-  const bundlePadding = parseFloat(mapStyles.getPropertyValue('--bundle-padding'));
-  const bundleGap = parseFloat(mapStyles.getPropertyValue('--bundle-gap'));
+  const bundlePadding = parseFloat(mapStyles.getPropertyValue('--bundle-padding')) || 8;
+  const bundleGap = parseFloat(mapStyles.getPropertyValue('--bundle-gap')) || 8;
   const bundleCount = Math.ceil(state.route.length / bundleSize);
   const bundleWidth = hexWidth + (bundleColumns - 1) * hexStep + bundlePadding * 2;
   const bundleHeight = hexHeight * 2.5 + bundlePadding * 2;
@@ -361,10 +368,10 @@ function renderHand() {
     if (CARD_ARTWORK[card.id]) elCard.classList.add('has-art');
     elCard.classList.toggle('selected', selectedCardIndexes.has(i) || selectedWildCardIndex === i);
     elCard.title = `${card.name} — ${card.symbol || 'action'} ${card.power}${card.cost ? ` · cost ${card.cost}` : ''}`;
-    elCard.addEventListener('click', () => showCardPreview(card, {
-      label: buyMode ? 'Select for purchase' : 'Play card',
-      action: () => onHandCardClick(i),
-    }));
+
+    // Direct click-to-play: in move mode, movement cards play immediately.
+    // In buy mode, click earmarks for purchase. Action/wild cards show preview.
+    elCard.addEventListener('click', () => onHandCardClick(i));
     elCard.innerHTML = cardFaceMarkup(card, false);
     el.hand.appendChild(elCard);
   });
@@ -409,10 +416,7 @@ function renderMarket() {
       elCard.className = `market-card symbol-${card.symbol || 'action'}${CARD_ARTWORK[card.id] ? ' has-art' : ''}`;
       elCard.innerHTML = `${cardFaceMarkup(card, true)}<div class="stock-count">${card.count} left</div>`;
       elCard.title = `Take ${card.name} for free — ${card.count} available`;
-      elCard.addEventListener('click', () => showCardPreview(card, {
-        label: 'Take for free',
-        action: () => onMarketCardClick(i, card.id),
-      }));
+      elCard.addEventListener('click', () => onMarketCardClick(i, card.id));
       el.marketRow.appendChild(elCard);
     });
     return;
@@ -431,13 +435,9 @@ function renderMarket() {
       return;
     }
     if (CARD_ARTWORK[card.id]) elCard.classList.add('has-art');
-    const action = state.freePick === state.myId ? 'freePick' : 'buy';
-    elCard.addEventListener('click', () => showCardPreview(card, {
-      label: `Buy for ${card.cost}`,
-      action: () => onMarketCardClick(i, card.id),
-    }));
+    elCard.addEventListener('click', () => onMarketCardClick(i, card.id));
     elCard.innerHTML = cardFaceMarkup(card, true);
-    elCard.title = `${card.name} — ${action === 'freePick' ? 'FREE (Transmitter)' : `cost ${card.cost}`}`;
+    elCard.title = `${card.name} — cost ${card.cost}`;
     el.marketRow.appendChild(elCard);
   });
 }
@@ -571,13 +571,19 @@ function onHandCardClick(i) {
     const target = state.route[player.pos + 1];
     if (target) toggleSelectedCard(i, target.power);
   } else if (buyMode) {
-    // earmark / un-earmark for buying
     send({ type: 'toggle_buy', cardIndex: i });
   } else if (card.symbol === 'wild') {
     selectedWildCardIndex = i;
     renderHand();
     renderCardControls();
+  } else if (card.action) {
+    // Action cards show a preview because they have special effects
+    showCardPreview(card, {
+      label: 'Play action',
+      action: () => onHandCardClick(i),
+    });
   } else {
+    // Movement card: play directly without preview overlay
     selectedWildCardIndex = null;
     send({ type: 'play_card', cardIndex: i });
   }
@@ -639,18 +645,30 @@ function showGameOver() {
 
 /* ---------- init ---------- */
 
+window.addEventListener('error', (e) => {
+  console.error('Global JS error:', e.error?.message || e.message);
+  setConnectMessage('JavaScript error: ' + (e.error?.message || e.message));
+});
+
 function init() {
-  populateMaps(Object.keys(MAPS));
+  console.log('init() called');
+  try {
+    populateMaps(Object.keys(MAPS));
+    console.log('populateMaps done, options:', el.inputMap?.options.length);
+  } catch (e) {
+    console.error('populateMaps failed:', e);
+    setConnectMessage('Error loading maps. Please reload.');
+  }
   connect();
 
   el.btnCreate.addEventListener('click', () => {
-    const mode = document.querySelector('.mode-btn.active').dataset.mode;
+    const mode = document.querySelector('.mode-btn.active')?.dataset.mode || 'ai';
     const mapKey = el.inputMap.value;
     send({ type: 'join', name: el.inputName.value.trim() || 'Player', mode, mapKey });
   });
 
   el.btnJoin.addEventListener('click', () => {
-    const mode = document.querySelector('.mode-btn.active').dataset.mode;
+    const mode = document.querySelector('.mode-btn.active')?.dataset.mode || 'ai';
     send({
       type: 'join',
       name: el.inputName.value.trim() || 'Player',
@@ -677,6 +695,7 @@ function init() {
   el.overlayCardPreview.addEventListener('click', (event) => {
     if (event.target === el.overlayCardPreview) closeCardPreview();
   });
+
   el.btnCardPreviewAction.addEventListener('click', () => {
     const action = cardPreviewAction;
     closeCardPreview();

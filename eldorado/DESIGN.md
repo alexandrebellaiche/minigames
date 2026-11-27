@@ -27,15 +27,15 @@
 - The server checks that the requesting player owns the active turn before it accepts card play, purchase selection, buying, special-space entry, card removal, or turn-end intents.
 
 ### Maps
-- Preset linear routes mimicking the game's suggested set layouts (Beginner / Standard / Advanced).
+- Five preset linear routes mimicking the game's suggested set layouts: **The Classic Route** (beginner), **Jungle Crawl** (standard), **River Run** (advanced), **The Isthmus** (expert), **The River Delta** (expert).
 - The client groups each route into offset bundles of up to five smaller, edge-sharing hexes, joined by dashed connectors; the server keeps the route as a linear sequence for movement.
 - Each route ends at the gate to El Dorado. Route is chosen when the room is created.
 
-### Card artwork
-- Full-card art in `artwork_v2/` is 219×341 pixels (0.642:1) and is displayed without cropping in 72×112 card frames (0.643:1).
-- Cards use thick category-color borders: green for machete, blue for paddle, yellow for coin, white for wild, and purple for action cards.
-- The surrounding game interface uses neutral charcoal surfaces with coral controls and highlights, reserving category colours for cards and terrain.
-- Clicking a hand or marketplace card opens an approximately 330%-scale preview, including a proportionally scaled category border. Its lower third carries enlarged rule text in a translucent white overlay; the preview provides the normal play, buy, or free-pick action and can be dismissed with Escape, its close button, or its backdrop.
+### Card interaction
+- Movement cards: clicking plays the card immediately (no preview needed).
+- Action cards and wild cards: click opens a preview overlay with rule text and a play button.
+- Market cards: click buys (or takes for free during Transmitter) directly.
+- A draw-deck stack sits at the end of the local player’s hand. Its visible stack depth grows with the number of cards remaining in the draw deck, and its face displays that count.
 
 ### Action cards (implemented in this release)
 - **Scientist**: draw 1 card, then optionally remove 1 card from hand.
